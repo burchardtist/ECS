@@ -1,0 +1,4 @@
+attrs==18.1.0
+mypy==0.620
+pygame==1.9.4
+simple-settings==0.13.0
