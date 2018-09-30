@@ -7,6 +7,7 @@ import pygame
 from ecs.engine import Engine
 from example.components import Floor, Renderable, Player
 from example.settings import MAP_SIZE, RESOLUTION, FPS, CAPTION
+from example.sprite import SimpleSprite
 
 
 @attr.s(slots=True)
@@ -34,19 +35,21 @@ def setup_map(engine: Engine) -> None:
                 continue
             block = engine.create_entity()
             block_component = Floor(walkable=False)
-            renderable_component = Renderable(
+            block_sprite = SimpleSprite(
                 path='block.png',
                 posx=x,
                 posy=y,
             )
+            renderable_component = Renderable(sprite=block_sprite)
             engine.add_component(block, [block_component, renderable_component])
     player = engine.create_entity()
     player_component = Player()
-    player_sprite = Renderable(
+    player_sprite = SimpleSprite(
         path='player.png',
-        posx=map_x/2,
-        posy=map_y/2,
+        posx=map_x / 2,
+        posy=map_y / 2,
     )
+    player_sprite = Renderable(sprite=player_sprite)
     engine.add_component(player, [player_component, player_sprite])
 
 

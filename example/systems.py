@@ -10,7 +10,7 @@ class RenderableSystem(ISystem):
         self.engine.app.window.fill((0, 0, 0))
         self.engine.app.rect_list = list()  # todo queue?
         for _, renderable in self.engine.get_components(Renderable):
-            self.engine.app.rect_list += [self.engine.app.window.blit(renderable.image, renderable.rect)]
+            self.engine.app.rect_list += [self.engine.app.window.blit(renderable.sprite.image, renderable.sprite.rect)]
         pygame.display.update(self.engine.app.rect_list)
         pygame.display.flip()
 
@@ -34,7 +34,7 @@ class MovePlayerSystem(ISystem):
                     player.direction = DirectionEnum.LEFT
 
         direction_x, direction_y = player.direction.value
-        renderable.set_position(
+        renderable.sprite.set_position(
             direction_x*player.speed,
             direction_y*player.speed,
         )
