@@ -5,6 +5,7 @@ from ecs.system import SystemManager
 class Engine:
     ec_manager = EntityComponentManager()
     system_manager = SystemManager()
+    context = dict()
 
     # ENTITY
     def create_entity(self):
@@ -29,3 +30,10 @@ class Engine:
 
     def process(self, *args, **kwargs):
         self.system_manager.run_processes(*args, **kwargs)
+
+    # CONTEXT
+    def get_context_item(self, key):
+        try:
+            return self.context[key]
+        except KeyError:
+            return

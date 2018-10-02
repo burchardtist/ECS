@@ -1,11 +1,12 @@
 import itertools
 import sys
+from random import randint
 
 import attr
 import pygame
 
 from ecs.engine import Engine
-from example.components import Floor, Renderable, Player
+from example.components import Floor, Renderable, Player, Fruit
 from example.settings import MAP_SIZE, RESOLUTION, FPS, CAPTION
 from example.sprite import SimpleSprite
 
@@ -14,7 +15,6 @@ from example.sprite import SimpleSprite
 class App:
     window = attr.ib()
     clock = attr.ib()
-    rect_list = attr.ib(default=list())
 
     def display_fps(self):
         caption = "{} - FPS: {:.2f}".format(CAPTION, self.clock.get_fps())
@@ -51,6 +51,16 @@ def setup_map(engine: Engine) -> None:
     )
     player_sprite = Renderable(sprite=player_sprite)
     engine.add_component(player, [player_component, player_sprite])
+
+    fruit = engine.create_entity()
+    fruit_component = Fruit()
+    fruit_sprite = SimpleSprite(
+        path='fruit.png',
+        posx=randint(1, map_x - 2),
+        posy=randint(1, map_y - 2),
+    )
+    fruit_sprite = Renderable(sprite=fruit_sprite)
+    engine.add_component(fruit, [fruit_component, fruit_sprite])
 
 
 def game_loop(engine: Engine, app: App):

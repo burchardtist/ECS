@@ -81,7 +81,9 @@ class EntityComponentManager:
         if not isinstance(component_types, collections.Iterable):
             component_types = {component_types}
 
-        component_containers = [self.components[ct] for ct in component_types]
+        component_containers = [
+            self.components.get(ct, list()) for ct in component_types
+        ]
         entities = reduce(
             lambda acc, x: [element for element in acc if element in x],
             component_containers)
