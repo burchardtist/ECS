@@ -9,10 +9,6 @@ class ISystem(ABC):
     def process(self, *args, **kwargs):
         pass
 
-    def engine_process(self, *args, **kwargs):
-        self.engine.ec_manager.clear_removed_entities()
-        self.process(*args, **kwargs)
-
 
 class SystemManager:
     systems = list()

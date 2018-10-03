@@ -28,6 +28,19 @@ def setup_app() -> App:
     return App(window=window, clock=clock)
 
 
+def spawn_fruit(engine):
+    map_x, map_y = MAP_SIZE
+    fruit = engine.create_entity()
+    fruit_component = Fruit()
+    fruit_sprite = SimpleSprite(
+        path='fruit.png',
+        posx=randint(1, map_x - 2),
+        posy=randint(1, map_y - 2),
+    )
+    fruit_sprite = Renderable(sprite=fruit_sprite)
+    engine.add_component(fruit, [fruit_component, fruit_sprite])
+
+
 def setup_map(engine: Engine) -> None:
     map_x, map_y = MAP_SIZE
     for x, y in itertools.product(range(map_x), range(map_y)):
@@ -52,15 +65,7 @@ def setup_map(engine: Engine) -> None:
     player_sprite = Renderable(sprite=player_sprite)
     engine.add_component(player, [player_component, player_sprite])
 
-    fruit = engine.create_entity()
-    fruit_component = Fruit()
-    fruit_sprite = SimpleSprite(
-        path='fruit.png',
-        posx=randint(1, map_x - 2),
-        posy=randint(1, map_y - 2),
-    )
-    fruit_sprite = Renderable(sprite=fruit_sprite)
-    engine.add_component(fruit, [fruit_component, fruit_sprite])
+    spawn_fruit(engine)
 
 
 def game_loop(engine: Engine, app: App):

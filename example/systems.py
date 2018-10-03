@@ -1,8 +1,9 @@
 import pygame
 
 from ecs.system import ISystem
-from example.components import Renderable, Player, Fruit
+from example.components import Renderable, Player, Fruit, Floor
 from example.enums import DirectionEnum, ContextEnum
+from example.utils import spawn_fruit
 
 
 def make_position(renderable):
@@ -14,21 +15,20 @@ def make_position(renderable):
 class RenderableSystem(ISystem):
     def process(self, *args, **kwargs):
         self.engine.app.window.fill((0, 0, 0))
-        for _, renderable in self.engine.get_components(Renderable):
+        self.engine.context[ContextEnum.RENDERABLE] = list()
+        for entity, renderable in self.engine.get_components(Renderable):
             self.engine.app.window.blit(
                 renderable.sprite.image,
                 renderable.sprite.rect
             )
-            self.update_position(renderable)
+            self.update_position(entity, renderable)
         pygame.display.update()
         pygame.display.flip()
 
-    def update_position(self, renderable):
-        try:
-            self.engine.context[ContextEnum.RENDERABLE].add(renderable.sprite)
-        except KeyError:
-            self.engine.context[ContextEnum.RENDERABLE] = set()
-            self.engine.context[ContextEnum.RENDERABLE].add(renderable.sprite)
+    def update_position(self, entity, renderable):
+        self.engine.context[ContextEnum.RENDERABLE].append(
+            (entity, renderable.sprite)
+        )
 
 
 class MovePlayerSystem(ISystem):
@@ -54,22 +54,36 @@ class MovePlayerSystem(ISystem):
             direction_x*player.speed,
             direction_y*player.speed,
         )
-        if self.collided_sprite(renderable):
-            player.speed = 0
+        self.resolve_collision(player, renderable)
 
-    def collided_sprite(self, renderable):
-        sprites = self.engine.get_context_item(ContextEnum.RENDERABLE) or set()
-        for sprite in sprites:
+    def collided_entity(self, renderable):
+        context_renderables = self.engine.get_context_item(
+            ContextEnum.RENDERABLE) or list()
+        for entity, sprite in context_renderables:
             if (renderable.sprite.is_collided_with(sprite) and
                     renderable.sprite is not sprite):
-                return sprite
+                return entity
+
+    def resolve_collision(self, player, renderable):
+        entity = self.collided_entity(renderable)
+        if not entity:
+            return
+
+        entity_components = self.engine.get_entity_components(entity)
+        if not entity_components:  # already dead entity
+            return
+
+        if entity_components.get(Fruit):
+            self.engine.remove_entity(entity)
+        elif entity_components.get(Floor):
+            player.speed = 0
 
 
 class FruitSystem(ISystem):
     def process(self, *args, **kwargs):
-        _, fruit, renderable = next(self.engine.get_components((Fruit, Renderable)))
-        if not fruit.spawned:
+        fruit_ec = next(self.engine.get_components((Fruit, Renderable)), None)
+        if not fruit_ec:
             self.respawn_fruit()
 
     def respawn_fruit(self):
-        pass
+        spawn_fruit(self.engine)

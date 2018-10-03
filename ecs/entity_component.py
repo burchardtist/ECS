@@ -57,6 +57,9 @@ class EntityComponentManager:
         components_types = self.entities[entity].keys()
         self.remove_components(entity, components_types)
 
+    def get_entity_components(self, entity):
+        return self.entities.get(entity)
+
     @update_required
     def add_components(self, entity, component_instances):
         if not isinstance(component_instances, collections.Iterable):

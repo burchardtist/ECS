@@ -14,6 +14,9 @@ class Engine:
     def remove_entity(self, entity, immediate=False):
         return self.ec_manager.remove_entity(entity, immediate)
 
+    def get_entity_components(self, entity):
+        return self.ec_manager.get_entity_components(entity)
+
     # COMPONENT
     def add_component(self, entity, component):
         self.ec_manager.add_components(entity, component)
@@ -29,6 +32,7 @@ class Engine:
         self.system_manager.add(self, system_instance, priority)
 
     def process(self, *args, **kwargs):
+        self.ec_manager.clear_removed_entities()
         self.system_manager.run_processes(*args, **kwargs)
 
     # CONTEXT
