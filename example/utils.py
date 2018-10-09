@@ -44,7 +44,7 @@ def spawn_fruit(engine):
 
 # todo: resolve glitch with weird spawn
 def attach_tail(engine, player, position=None):
-    direction = [a * b for a, b in zip(player.direction.value, (-1, -1))]
+    direction = [a * b for a, b in zip(player.direction, (-1, -1))]
     if not position:
         position = player.tail[-1]['renderable'].sprite.get_position()
 

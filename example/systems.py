@@ -58,7 +58,7 @@ class MovePlayerSystem(ISystem):
             result = [
                 a-b for a, b in zip(tail_position, head_position)
             ]
-            result = [a + b for a, b in zip(result, direction.value)]
+            result = [a + b for a, b in zip(result, direction)]
         except IndexError:
             player.direction = direction
         else:
@@ -77,7 +77,7 @@ class MovePlayerSystem(ISystem):
         return attach_tail(self.engine, player)
 
     def move_tail(self, player):
-        direction_x, direction_y = player.direction.value
+        direction_x, direction_y = player.direction
 
         player.head['renderable'].sprite.move_position(
             direction_x*player.speed,
