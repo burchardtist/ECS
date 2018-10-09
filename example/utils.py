@@ -6,7 +6,7 @@ import attr
 import pygame
 
 from ecs.engine import Engine
-from example.components import Floor, Renderable, Player, Fruit, Tail
+from example.components import Wall, Renderable, Player, Fruit, Tail
 from example.settings import MAP_SIZE, RESOLUTION, FPS, CAPTION
 from example.sprite import SimpleSprite
 
@@ -72,7 +72,7 @@ def setup_map(engine: Engine) -> None:
             if x not in [0, map_x - 1] and y not in [0, map_y - 1]:
                 continue
             block = engine.create_entity()
-            block_component = Floor(walkable=False)
+            block_component = Wall(walkable=False)
             block_sprite = SimpleSprite(
                 path='block.png',
                 posx=x,

@@ -1,7 +1,7 @@
 import pygame
 
 from ecs.system import ISystem
-from example.components import Renderable, Player, Fruit, Floor, Tail
+from example.components import Renderable, Player, Fruit, Wall, Tail
 from example.enums import DirectionEnum, ContextEnum
 from example.utils import spawn_fruit, attach_tail
 
@@ -124,10 +124,8 @@ class MovePlayerSystem(ISystem):
         if entity_components.get(Fruit):
             self.engine.remove_entity(entity)
             self.attach_tail(player)
-        elif entity_components.get(Floor):
+        elif {Wall, Tail} & entity_components.keys():
             player.speed = 0
-        elif entity_components.get(Tail):
-            pass
 
 
 class FruitSystem(ISystem):

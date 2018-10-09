@@ -7,7 +7,7 @@ from example.sprite import SimpleSprite
 
 
 @attr.s(slots=True)
-class Floor:
+class Wall:
     walkable: bool = attr.ib(bool)
 
 
