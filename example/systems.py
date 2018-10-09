@@ -1,15 +1,9 @@
 import pygame
 
 from ecs.system import ISystem
-from example.components import Renderable, Player, Fruit, Floor
+from example.components import Renderable, Player, Fruit, Floor, Tail
 from example.enums import DirectionEnum, ContextEnum
-from example.utils import spawn_fruit
-
-
-def make_position(renderable):
-    pos_x = renderable.sprite.rect.x
-    pos_y = renderable.sprite.rect.y
-    return '{}_{}'.format(pos_x, pos_y)
+from example.utils import spawn_fruit, attach_tail, position_to_int
 
 
 class RenderableSystem(ISystem):
@@ -33,28 +27,45 @@ class RenderableSystem(ISystem):
 
 class MovePlayerSystem(ISystem):
     def process(self, events):
-        _, player, renderable = next(self.engine.get_components((Player, Renderable)))
+        _, player = next(self.engine.get_components(Player))
         for event in events:
             if event.type == pygame.KEYDOWN:
+                direction = None
                 if (event.key == pygame.K_UP and
                         player.direction != DirectionEnum.DOWN):
-                    player.direction = DirectionEnum.UP
+                    direction = DirectionEnum.UP
                 if (event.key == pygame.K_DOWN and
                         player.direction != DirectionEnum.UP):
-                    player.direction = DirectionEnum.DOWN
+                    direction = DirectionEnum.DOWN
                 if (event.key == pygame.K_RIGHT and
                         player.direction != DirectionEnum.LEFT):
-                    player.direction = DirectionEnum.RIGHT
+                    direction = DirectionEnum.RIGHT
                 if (event.key == pygame.K_LEFT and
                         player.direction != DirectionEnum.RIGHT):
-                    player.direction = DirectionEnum.LEFT
+                    direction = DirectionEnum.LEFT
+                self.change_direction(player, direction)
+        self.resolve_collision(player, player.head['renderable'])
+        self.move_tail(player)
 
-        direction_x, direction_y = player.direction.value
-        renderable.sprite.set_position(
-            direction_x*player.speed,
-            direction_y*player.speed,
-        )
-        self.resolve_collision(player, renderable)
+    def change_direction(self, player, direction):
+        if not direction:
+            return
+        try:
+            tail_position = position_to_int(
+                player.tail[1]['renderable'].sprite.get_position()
+            )
+            head_position = position_to_int(
+                player.head['renderable'].sprite.get_position()
+            )
+            result = [
+                a-b for a, b in zip(tail_position, head_position)
+            ]
+            result = [a + b for a, b in zip(result, direction.value)]
+        except IndexError:
+            player.direction = direction
+        else:
+            if all(result):
+                player.direction = direction
 
     def collided_entity(self, renderable):
         context_renderables = self.engine.get_context_item(
@@ -63,6 +74,37 @@ class MovePlayerSystem(ISystem):
             if (renderable.sprite.is_collided_with(sprite) and
                     renderable.sprite is not sprite):
                 return entity
+
+    def attach_tail(self, player):
+        return attach_tail(self.engine, player)
+
+    def move_tail(self, player):
+        direction_x, direction_y = player.direction.value
+
+        player.head['renderable'].sprite.move_position(
+            direction_x*player.speed,
+            direction_y*player.speed,
+        )
+        # todo: refactor
+        old_posx, old_posy = position_to_int(
+            player.head['renderable'].sprite.get_position())
+        comp_posx, comp_posy = player.head['component'].old_position
+        if abs(comp_posx - old_posx) > 1 or abs(comp_posy - old_posy) > 1 or (old_posx != comp_posx and old_posy != comp_posy):
+            player.head['component'].old_position = (old_posx - direction_x, old_posy - direction_y)
+
+        try:
+            for i, tail in enumerate(player.tail[1:]):
+                tail_component = tail['component']
+                head_position = player.tail[i]['component'].old_position
+                sprite = tail['renderable'].sprite
+                tail_position = position_to_int(sprite.get_position())
+
+                if tail_position == head_position:
+                    break
+                tail_component.old_position = tail_position
+                sprite.set_position(*head_position)
+        except KeyError:
+            pass
 
     def resolve_collision(self, player, renderable):
         entity = self.collided_entity(renderable)
@@ -75,8 +117,11 @@ class MovePlayerSystem(ISystem):
 
         if entity_components.get(Fruit):
             self.engine.remove_entity(entity)
+            self.attach_tail(player)
         elif entity_components.get(Floor):
             player.speed = 0
+        elif entity_components.get(Tail):
+            pass
 
 
 class FruitSystem(ISystem):

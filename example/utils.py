@@ -6,7 +6,7 @@ import attr
 import pygame
 
 from ecs.engine import Engine
-from example.components import Floor, Renderable, Player, Fruit
+from example.components import Floor, Renderable, Player, Fruit, Tail
 from example.settings import MAP_SIZE, RESOLUTION, FPS, CAPTION
 from example.sprite import SimpleSprite
 
@@ -28,6 +28,7 @@ def setup_app() -> App:
     return App(window=window, clock=clock)
 
 
+# todo: now fruit may spawn on snake's tail
 def spawn_fruit(engine):
     map_x, map_y = MAP_SIZE
     fruit = engine.create_entity()
@@ -39,6 +40,35 @@ def spawn_fruit(engine):
     )
     fruit_sprite = Renderable(sprite=fruit_sprite)
     engine.add_component(fruit, [fruit_component, fruit_sprite])
+
+
+# todo: resolve glitch with weird spawn
+def attach_tail(engine, player, position=None):
+    direction = [a * b for a, b in zip(player.direction.value, (-1, -1))]
+    if not position:
+        position = player.tail[-1]['renderable'].sprite.get_position()
+
+    posx, posy = position
+
+    tail = engine.create_entity()
+    tail_sprite = SimpleSprite(
+        path='player.png',
+        posx=posx + direction[0],
+        posy=posy + direction[1],
+
+    )
+    tail_component = Tail()
+    tail_renderable = Renderable(sprite=tail_sprite)
+    engine.add_component(tail, [tail_renderable, tail_component])
+    player.tail.append(dict(
+        renderable=tail_renderable,
+        component=tail_component,
+    ))
+
+
+# todo: move it to Sprite
+def position_to_int(position):
+    return int(position[0]), int(position[1])
 
 
 def setup_map(engine: Engine) -> None:
@@ -57,13 +87,14 @@ def setup_map(engine: Engine) -> None:
             engine.add_component(block, [block_component, renderable_component])
     player = engine.create_entity()
     player_component = Player()
-    player_sprite = SimpleSprite(
-        path='player.png',
-        posx=map_x / 2,
-        posy=map_y / 2,
+    map_x, map_y = MAP_SIZE
+    position = (map_x / 2, map_y / 2)
+    attach_tail(
+        engine,
+        player_component,
+        position=position,
     )
-    player_sprite = Renderable(sprite=player_sprite)
-    engine.add_component(player, [player_component, player_sprite])
+    engine.add_component(player, player_component)
 
     spawn_fruit(engine)
 

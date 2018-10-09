@@ -1,6 +1,6 @@
 import os
 from decimal import Decimal
-from typing import Union
+from typing import Union, Tuple
 
 import pygame
 from pygame.rect import Rect
@@ -36,15 +36,23 @@ class SimpleSprite(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.update()
 
-    def set_position(self, posx: Decimal, posy: Decimal) -> None:
+    def get_position(self) -> Tuple[Decimal, Decimal]:
+        return self._posx, self._posy
+
+    def move_position(self, posx: Decimal, posy: Decimal) -> None:
         self._posx += posx
         self._posy += posy
         self.update()
 
+    def set_position(self, posx: Decimal, posy: Decimal) -> None:
+        self._posx = posx
+        self._posy = posy
+        self.update()
+
     def update(self) -> None:
         self.rect = Rect(
-            self._posx * self.width,
-            self._posy * self.height,
+            int(self._posx) * self.width,
+            int(self._posy) * self.height,
             self.width,
             self.height
         )
