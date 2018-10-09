@@ -3,7 +3,7 @@ import pygame
 from ecs.system import ISystem
 from example.components import Renderable, Player, Fruit, Floor, Tail
 from example.enums import DirectionEnum, ContextEnum
-from example.utils import spawn_fruit, attach_tail, position_to_int
+from example.utils import spawn_fruit, attach_tail
 
 
 class RenderableSystem(ISystem):
@@ -51,12 +51,10 @@ class MovePlayerSystem(ISystem):
         if not direction:
             return
         try:
-            tail_position = position_to_int(
-                player.tail[1]['renderable'].sprite.get_position()
-            )
-            head_position = position_to_int(
-                player.head['renderable'].sprite.get_position()
-            )
+            tail_position = \
+                player.tail[1]['renderable'].sprite.get_position(as_int=True)
+            head_position = \
+                player.head['renderable'].sprite.get_position(as_int=True)
             result = [
                 a-b for a, b in zip(tail_position, head_position)
             ]
@@ -86,8 +84,8 @@ class MovePlayerSystem(ISystem):
             direction_y*player.speed,
         )
         # todo: refactor
-        old_posx, old_posy = position_to_int(
-            player.head['renderable'].sprite.get_position())
+        old_posx, old_posy = \
+            player.head['renderable'].sprite.get_position(as_int=True)
         comp_posx, comp_posy = player.head['component'].old_position
         if abs(comp_posx - old_posx) > 1 or abs(comp_posy - old_posy) > 1 or (old_posx != comp_posx and old_posy != comp_posy):
             player.head['component'].old_position = (old_posx - direction_x, old_posy - direction_y)
@@ -97,7 +95,7 @@ class MovePlayerSystem(ISystem):
                 tail_component = tail['component']
                 head_position = player.tail[i]['component'].old_position
                 sprite = tail['renderable'].sprite
-                tail_position = position_to_int(sprite.get_position())
+                tail_position = sprite.get_position(as_int=True)
 
                 if tail_position == head_position:
                     break

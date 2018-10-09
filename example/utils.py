@@ -66,11 +66,6 @@ def attach_tail(engine, player, position=None):
     ))
 
 
-# todo: move it to Sprite
-def position_to_int(position):
-    return int(position[0]), int(position[1])
-
-
 def setup_map(engine: Engine) -> None:
     map_x, map_y = MAP_SIZE
     for x, y in itertools.product(range(map_x), range(map_y)):

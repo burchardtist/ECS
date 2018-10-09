@@ -36,8 +36,13 @@ class SimpleSprite(pygame.sprite.Sprite):
         self.height = self.image.get_height()
         self.update()
 
-    def get_position(self) -> Tuple[Decimal, Decimal]:
-        return self._posx, self._posy
+    def get_position(
+            self,
+            as_int=False
+    ) -> Union[Tuple[Decimal, Decimal], Tuple[int, int]]:
+        return ((int(self._posx), int(self._posy))
+                if as_int
+                else (self._posx, self._posy))
 
     def move_position(self, posx: Decimal, posy: Decimal) -> None:
         self._posx += posx
