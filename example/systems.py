@@ -44,7 +44,9 @@ class MovePlayerSystem(ISystem):
                         player.direction != DirectionEnum.RIGHT):
                     direction = DirectionEnum.LEFT
                 self.change_direction(player, direction)
+
         self.resolve_collision(player, player.head['renderable'])
+        self.move_head(player)
         self.move_tail(player)
 
     def change_direction(self, player, direction):
@@ -76,30 +78,36 @@ class MovePlayerSystem(ISystem):
     def attach_tail(self, player):
         return attach_tail(self.engine, player)
 
-    def move_tail(self, player):
+    def move_head(self, player):
         direction_x, direction_y = player.direction
 
-        player.head['renderable'].sprite.move_position(
-            direction_x*player.speed,
-            direction_y*player.speed,
-        )
-        # todo: refactor
-        old_posx, old_posy = \
-            player.head['renderable'].sprite.get_position(as_int=True)
-        comp_posx, comp_posy = player.head['component'].old_position
-        if abs(comp_posx - old_posx) > 1 or abs(comp_posy - old_posy) > 1 or (old_posx != comp_posx and old_posy != comp_posy):
-            player.head['component'].old_position = (old_posx - direction_x, old_posy - direction_y)
+        head_renderable = player.head['renderable']
+        head_component = player.head['component']
 
+        head_renderable.sprite.move_position(
+            direction_x * player.speed,
+            direction_y * player.speed,
+        )
+
+        actual_position = head_renderable.sprite.get_position(as_int=True)
+        component_position = head_component.old_position
+        result = [abs(a-b) for a, b in zip(actual_position, component_position)]
+        if any(filter(lambda x: x > 1, result)) or all(result):
+            head_component.old_position = (
+                [a-b for a, b in zip(actual_position, player.direction)]
+            )
+
+    def move_tail(self, player):
         try:
             for i, tail in enumerate(player.tail[1:]):
-                tail_component = tail['component']
                 head_position = player.tail[i]['component'].old_position
                 sprite = tail['renderable'].sprite
                 tail_position = sprite.get_position(as_int=True)
 
                 if tail_position == head_position:
                     break
-                tail_component.old_position = tail_position
+
+                tail['component'].old_position = tail_position
                 sprite.set_position(*head_position)
         except KeyError:
             pass
