@@ -1,4 +1,8 @@
+from typing import Tuple, List, Optional
+from uuid import uuid4
+
 import pygame
+from pygame.sprite import Sprite
 
 from ecs.system import ISystem
 from example.components import Renderable, Player, Fruit, Wall, Tail
@@ -9,7 +13,7 @@ from example.utils import spawn_fruit, attach_tail
 class RenderableSystem(ISystem):
     def process(self, *args, **kwargs):
         self.engine.app.window.fill((0, 0, 0))
-        self.engine.context[ContextEnum.RENDERABLE] = list()
+        self.engine.context[ContextEnum.RENDERABLE] = dict()
         for entity, renderable in self.engine.get_components(Renderable):
             self.engine.app.window.blit(
                 renderable.sprite.image,
@@ -20,8 +24,14 @@ class RenderableSystem(ISystem):
         pygame.display.flip()
 
     def update_position(self, entity, renderable):
-        self.engine.context[ContextEnum.RENDERABLE].append(
-            (entity, renderable.sprite)
+        renderable_context = self.engine.context[ContextEnum.RENDERABLE]
+        sprite = renderable.sprite
+        position = sprite.get_position(as_int=True)
+
+        if position not in renderable_context.keys():
+            renderable_context[position] = list()
+        renderable_context[position].append(
+            (entity, sprite)
         )
 
 
@@ -67,13 +77,20 @@ class MovePlayerSystem(ISystem):
             if all(result):
                 player.direction = direction
 
-    def collided_entity(self, renderable):
+    def collided_entity(
+            self,
+            entity,
+            renderable
+    ) -> Optional[List[Tuple[uuid4, Sprite]]]:
         context_renderables = self.engine.get_context_item(
-            ContextEnum.RENDERABLE) or list()
-        for entity, sprite in context_renderables:
-            if (renderable.sprite.is_collided_with(sprite) and
-                    renderable.sprite is not sprite):
-                return entity
+            ContextEnum.RENDERABLE) or dict()
+
+        position = renderable.sprite.get_position(as_int=True)
+        entities = context_renderables.get(position)
+        if entities:
+            entities.remove((entity, renderable.sprite))
+            entities = [entity for entity, sprite in entities]
+        return entities
 
     def attach_tail(self, player):
         return attach_tail(self.engine, player)
@@ -113,19 +130,20 @@ class MovePlayerSystem(ISystem):
             pass
 
     def resolve_collision(self, player, renderable):
-        entity = self.collided_entity(renderable)
-        if not entity:
+        entities = self.collided_entity(player.head['entity'], renderable)
+        if not entities:
             return
 
-        entity_components = self.engine.get_entity_components(entity)
-        if not entity_components:  # already dead entity
-            return
+        for entity in entities:
+            entity_components = self.engine.get_entity_components(entity)
+            if not entity_components:  # already dead entity
+                return
 
-        if entity_components.get(Fruit):
-            self.engine.remove_entity(entity)
-            self.attach_tail(player)
-        elif {Wall, Tail} & entity_components.keys():
-            player.speed = 0
+            if entity_components.get(Fruit):
+                self.engine.remove_entity(entity)
+                self.attach_tail(player)
+            elif {Wall, Tail} & entity_components.keys():
+                player.speed = 0
 
 
 class FruitSystem(ISystem):

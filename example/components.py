@@ -20,7 +20,7 @@ class Renderable:
 @attr.s(slots=True)
 class Player:
     direction = attr.ib(type=DirectionEnum, default=DirectionEnum.UP)
-    speed = attr.ib(type=Decimal, default=Decimal('0.1'))
+    speed = attr.ib(type=Decimal, default=Decimal('0.3'))
     tail = attr.ib(type=list, default=list())
 
     @property

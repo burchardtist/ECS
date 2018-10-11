@@ -7,6 +7,7 @@ import pygame
 
 from ecs.engine import Engine
 from example.components import Wall, Renderable, Player, Fruit, Tail
+from example.enums import ContextEnum
 from example.settings import MAP_SIZE, RESOLUTION, FPS, CAPTION
 from example.sprite import SimpleSprite
 
@@ -28,22 +29,29 @@ def setup_app() -> App:
     return App(window=window, clock=clock)
 
 
-# todo: now fruit may spawn on snake's tail
-def spawn_fruit(engine):
+def spawn_fruit(engine: Engine) -> None:
     map_x, map_y = MAP_SIZE
     fruit = engine.create_entity()
     fruit_component = Fruit()
+
+    while True:
+        posx = randint(1, map_x - 2)
+        posy = randint(1, map_x - 2)
+        positions = engine.get_context_item(ContextEnum.RENDERABLE) or dict()
+        if not positions.get((posx, posy)):
+            break
+        print('double!')
+
     fruit_sprite = SimpleSprite(
         path='fruit.png',
-        posx=randint(1, map_x - 2),
-        posy=randint(1, map_y - 2),
+        posx=posx,
+        posy=posy,
     )
     fruit_sprite = Renderable(sprite=fruit_sprite)
     engine.add_component(fruit, [fruit_component, fruit_sprite])
 
 
-# todo: resolve glitch with weird spawn
-def attach_tail(engine, player, position=None):
+def attach_tail(engine: Engine, player: Player, position=None) -> None:
     direction = [a * b for a, b in zip(player.direction, (-1, -1))]
     if not position:
         position = player.tail[-1]['renderable'].sprite.get_position()
@@ -63,6 +71,7 @@ def attach_tail(engine, player, position=None):
     player.tail.append(dict(
         renderable=tail_renderable,
         component=tail_component,
+        entity=tail,
     ))
 
 
@@ -94,7 +103,7 @@ def setup_map(engine: Engine) -> None:
     spawn_fruit(engine)
 
 
-def game_loop(engine: Engine, app: App):
+def game_loop(engine: Engine, app: App) -> None:
     done = False
     while not done:
         events = pygame.event.get()
