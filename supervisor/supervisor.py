@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Set, Union
+from typing import Dict, Iterable, List, Set, Union, Type
 from uuid import UUID
 
 from ecs.component import IComponent
@@ -25,9 +25,10 @@ class Supervisor:
 
     def get_components_intersection(
             self,
-            components: Union[IComponent, List[IComponent]]
+            components: Union[IComponent, List[IComponent], str, List[str]]
     ) -> List[Entity]:
         result = list()
+        components = make_iterable(components)
         for entity in self.entities.values():
             if all([entity.components.get(x) for x in components]):
                 result.append(entity)
@@ -62,12 +63,16 @@ class Supervisor:
             component.entity.remove_component(component)
 
     def add_system(self, system: ISystem) -> None:
+        system.set_engine(self)
         self.systems.append(system)
         self.systems.sort(key=lambda x: x.priority, reverse=True)
 
-    def remove_system(self, system: ISystem) -> None:
-        self.systems.remove(system)
+    def remove_system(self, system: Type[ISystem]) -> None:
+        self.systems = [x for x in self.systems if not isinstance(x, system)]
 
     def run_processes(self, *args, **kwargs) -> None:
         for system in self.systems:
             system.process(*args, **kwargs)
+
+    def start_loop(self):
+        return self.app.game_loop(self)

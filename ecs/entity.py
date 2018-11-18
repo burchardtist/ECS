@@ -1,4 +1,4 @@
-from typing import Dict, Set, TYPE_CHECKING
+from typing import Dict, Set, TYPE_CHECKING, Union
 from uuid import UUID, uuid4
 
 from supervisor.utils import AttrsDict
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class Entity:
     id: UUID = None
-    components = None  # type: Dict[IComponent, Set[IComponent]]
+    components = None  # type: Dict[Union[IComponent, str], Set[IComponent]]
 
     def __init__(self) -> None:
         self.id = uuid4()

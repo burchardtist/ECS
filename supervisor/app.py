@@ -12,6 +12,7 @@ class App:
     clock = None
     renderer = None
     background_color = None
+    done = False
 
     def __init__(self):
         pygame.init()
@@ -24,18 +25,16 @@ class App:
         pygame.display.set_caption(caption)
 
     def game_loop(self, engine) -> None:
-        done = False
-        # self.load_map(engine, settings.MAP_PATH)
         logger.info('Game loop started')
-        while not done:
+        while not self.done:
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    done = True
+                    self.done = True
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        done = True
-            engine.process(events=events)
+                        self.done = True
+            engine.run_processes(events=events)
             self.clock.tick(settings.FPS)
             self.display_fps()
         logger.info('Game loop finished')

@@ -8,7 +8,7 @@ from ecs.entity import Entity
 
 @attr.s(slots=True)
 class IComponent(ABC):
-    entity = attr.ib(type=Entity)
+    entity = attr.ib(type=Entity)  # todo: default=None
     id = attr.ib(init=False)
 
     @id.default
