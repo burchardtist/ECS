@@ -12,6 +12,7 @@ from supervisor.supervisor import Supervisor
 ENTITIES_COUNT = 5000
 TEST_NAME = 'NameSystemTest'
 
+
 # COMPONENTS
 @attr.s(slots=True, hash=True)
 class Name(IComponent):
@@ -166,12 +167,8 @@ def test_remove_system(engine):
 
 def test_systems_priority(engine):
     engine.add_system(NameSystem(priority=120))
-    engine.add_system(PositionSystem(priority=11110))
+    engine.add_system(PositionSystem(priority=10))
 
     assert isinstance(engine.systems[0], NameSystem)
-    assert isinstance(engine.systems[1], StopSystem)
+    assert isinstance(engine.systems[1], StopSystem)  # has default 100
     assert isinstance(engine.systems[2], PositionSystem)
-
-
-def test_engine_systems_length(engine):
-    pass

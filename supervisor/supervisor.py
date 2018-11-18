@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Set, Union, Type
+from typing import Dict, Iterable, List, Set, Type, Union
 from uuid import UUID
 
 from ecs.component import IComponent
