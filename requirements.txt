@@ -1,5 +1,2 @@
-attrs==18.1.0
-pygame==1.9.4
+attrs==18.2.0
 pytest==3.10.0
-pytest-env==0.6.2
-simple-settings==0.13.0

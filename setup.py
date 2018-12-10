@@ -13,7 +13,7 @@ setup(
     packages=['ecs', 'supervisor'],
     url='https://github.com/burchardtist/game_engine',
     license='MIT',
-    description='The ECS and Pygame utility',
+    description='The ECS architecture',
     long_description=readme,
     install_requires=required,
 )

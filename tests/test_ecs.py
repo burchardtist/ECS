@@ -32,15 +32,6 @@ class FooBar(IComponent):
 
 
 # SYSTEMS
-class StopSystem(ISystem):
-    iter = 0
-
-    def process(self, *args, **kwargs) -> None:
-        self.iter += 1
-        if self.iter > 10:
-            self.engine.app.done = True
-
-
 class PositionSystem(ISystem):
     def process(self, *args, **kwargs):
         position_entities = self.engine.get_components_intersection('Position')
@@ -62,14 +53,12 @@ class NameSystem(ISystem):
 @pytest.fixture
 def engine():
     engine = Supervisor()
-    engine.add_system(StopSystem())
     return engine
 
 
 @pytest.fixture
 def populated_engine():
     engine = Supervisor()
-    engine.add_system(StopSystem())
     for i in range(1, ENTITIES_COUNT+1):
         entity = engine.create_entity()
         name = Name(name=f'component_{i}', entity=entity)
@@ -153,15 +142,15 @@ def test_components_intersection(populated_engine):
 
 def test_system(populated_engine):
     populated_engine.add_system(NameSystem())
-    with pytest.raises(SystemExit) as e:
-        populated_engine.start_loop()
-    assert e.type == SystemExit
+    populated_engine.execute_system(NameSystem)
     for entity in populated_engine.entities.values():
         assert all(x.name == TEST_NAME for x in entity.components['Name'])
 
 
 def test_remove_system(engine):
-    engine.remove_system(StopSystem)
+    engine.add_system(NameSystem())
+    assert len(engine.systems) == 1
+    engine.remove_system(NameSystem)
     assert len(engine.systems) == 0
 
 
@@ -170,5 +159,4 @@ def test_systems_priority(engine):
     engine.add_system(PositionSystem(priority=10))
 
     assert isinstance(engine.systems[0], NameSystem)
-    assert isinstance(engine.systems[1], StopSystem)  # has default 100
-    assert isinstance(engine.systems[2], PositionSystem)
+    assert isinstance(engine.systems[1], PositionSystem)

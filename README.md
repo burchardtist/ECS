@@ -1,6 +1,6 @@
-# Python Game Engine
+# Python ECS
 
 ---
 ## Preface
-The goal of this project is to implement game engine on ECS architecture and Pygame library.
+The goal of this project is to implement game engine based on ECS architecture.
 ## Entity Component System

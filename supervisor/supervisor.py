@@ -4,20 +4,17 @@ from uuid import UUID
 from ecs.component import IComponent
 from ecs.entity import Entity
 from ecs.system import ISystem
-from supervisor.app import App
 from supervisor.utils import AttrsDict, make_iterable
 
 
 class Supervisor:
     entities: Dict[UUID, Entity] = None
     components: Dict[IComponent, Set[IComponent]] = None
-    app: App = None
     systems: List[ISystem] = None
 
     def __init__(self):
         self.entities = dict()
         self.components = AttrsDict()
-        self.app = App()
         self.systems = list()
 
     def get_entity(self, entity_id: UUID) -> Entity:
@@ -70,9 +67,6 @@ class Supervisor:
     def remove_system(self, system: Type[ISystem]) -> None:
         self.systems = [x for x in self.systems if not isinstance(x, system)]
 
-    def run_processes(self, *args, **kwargs) -> None:
-        for system in self.systems:
-            system.process(*args, **kwargs)
-
-    def start_loop(self):
-        return self.app.game_loop(self)
+    def execute_system(self, system: Type[ISystem], *args, **kwargs) -> None:
+        system_instance = next(s for s in self.systems if isinstance(s, system))
+        system_instance.process(*args, **kwargs)
