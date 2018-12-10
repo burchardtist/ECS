@@ -4,10 +4,10 @@ from uuid import UUID
 import attr
 import pytest
 
-from ecs.component import IComponent
-from ecs.entity import Entity
-from ecs.system import ISystem
-from supervisor.supervisor import Supervisor
+from byt.ecs.component import IComponent
+from byt.ecs.entity import Entity
+from byt.ecs.system import ISystem
+from byt.middleware.supervisor import Supervisor
 
 ENTITIES_COUNT = 5000
 TEST_NAME = 'NameSystemTest'

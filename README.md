@@ -1,6 +1,6 @@
-# Python ECS
+# BYT
 
 ---
 ## Preface
-The goal of this project is to implement game engine based on ECS architecture.
+The goal of this project is to implement ECS architecture for python environment.
 ## Entity Component System

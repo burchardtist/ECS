@@ -1,10 +1,10 @@
 from typing import Dict, Set, TYPE_CHECKING, Union
 from uuid import UUID, uuid4
 
-from supervisor.utils import AttrsDict
+from byt.middleware.utils import AttrsDict
 
 if TYPE_CHECKING:
-    from ecs.component import IComponent
+    from byt.ecs.component import IComponent
 
 
 class Entity:

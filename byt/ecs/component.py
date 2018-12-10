@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 import attr
 
-from ecs.entity import Entity
+from byt.ecs.entity import Entity
 
 
 @attr.s(slots=True)

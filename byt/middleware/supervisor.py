@@ -1,10 +1,10 @@
 from typing import Dict, Iterable, List, Set, Type, Union
 from uuid import UUID
 
-from ecs.component import IComponent
-from ecs.entity import Entity
-from ecs.system import ISystem
-from supervisor.utils import AttrsDict, make_iterable
+from byt.ecs.component import IComponent
+from byt.ecs.entity import Entity
+from byt.ecs.system import ISystem
+from byt.middleware.utils import AttrsDict, make_iterable
 
 
 class Supervisor:

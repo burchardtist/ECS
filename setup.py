@@ -6,12 +6,12 @@ with open('requirements.txt') as f:
     required = f.read().splitlines()
 
 setup(
-    name='ecs',
-    version='0.1.0',
+    name='byt',
+    version='0.1.1',
     author='Aleksander Philips',
     author_email='aleksander.philips at gmail.com',
-    packages=['ecs', 'supervisor'],
-    url='https://github.com/burchardtist/game_engine',
+    packages=['byt'],
+    url='https://github.com/burchardtist/byt',
     license='MIT',
     description='The ECS architecture',
     long_description=readme,
