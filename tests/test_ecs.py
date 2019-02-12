@@ -34,18 +34,18 @@ class FooBar(IComponent):
 # SYSTEMS
 class PositionSystem(ISystem):
     def process(self, *args, **kwargs):
-        position_entities = self.engine.get_components_intersection('Position')
+        position_entities = self.engine.get_components_intersection(Position)
         for entity in position_entities:
-            for position in entity.components['Position']:
+            for position in entity.components[Position]:
                 position.x += 1
                 position.y += 1
 
 
 class NameSystem(ISystem):
     def process(self, *args, **kwargs):
-        name_entities = self.engine.get_components_intersection('Name')
+        name_entities = self.engine.get_components_intersection(Name)
         for entity in name_entities:
-            for name in entity.components['Name']:
+            for name in entity.components[Name]:
                 name.name = TEST_NAME
 
 
@@ -110,9 +110,9 @@ def test_remove_component(engine):
 
 
 def test_components_intersection(populated_engine):
-    assert not populated_engine.get_components_intersection('FooBar')
+    assert not populated_engine.get_components_intersection(FooBar)
     assert not populated_engine.get_components_intersection(
-        ['FooBar', 'Name', 'Position']
+        [FooBar, Name, Position]
     )
 
     for _ in range(0, 100):
@@ -120,23 +120,23 @@ def test_components_intersection(populated_engine):
         foobar = FooBar(foo=True, bar=False, entity=entity)
         populated_engine.add_components(entity, foobar)
 
-    foobar_set = populated_engine.get_components_intersection('FooBar')
+    foobar_set = populated_engine.get_components_intersection(FooBar)
     assert len(foobar_set) == 100
-    assert all(x.components['FooBar'] for x in foobar_set)
+    assert all(x.components[FooBar] for x in foobar_set)
 
     for entity in list(populated_engine.entities.values())[:100]:
         foobar = FooBar(foo=True, bar=False, entity=entity)
         populated_engine.add_components(entity, foobar)
 
-    foobar_set = populated_engine.get_components_intersection('FooBar')
+    foobar_set = populated_engine.get_components_intersection(FooBar)
     assert len(foobar_set) == 200
 
     foobar_name_set = populated_engine.get_components_intersection(
-        ['FooBar', 'Name']
+        [FooBar, Name]
     )
     assert len(foobar_name_set) == 100
     assert all(
-        x.components['FooBar'] and x.components['Name'] for x in foobar_name_set
+        x.components[FooBar] and x.components[Name] for x in foobar_name_set
     )
 
 
@@ -144,7 +144,7 @@ def test_system(populated_engine):
     populated_engine.add_system(NameSystem())
     populated_engine.execute_system(NameSystem)
     for entity in populated_engine.entities.values():
-        assert all(x.name == TEST_NAME for x in entity.components['Name'])
+        assert all(x.name == TEST_NAME for x in entity.components[Name])
 
 
 def test_remove_system(engine):

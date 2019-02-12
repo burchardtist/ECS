@@ -1,6 +1,7 @@
-from typing import Dict, Iterable, List, Set, Type, Union
+from typing import Dict, List, Set, Type
 from uuid import UUID
 
+import byt.middleware.typing as ic_typing
 from byt.ecs.component import IComponent
 from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
@@ -22,7 +23,7 @@ class Supervisor:
 
     def get_components_intersection(
             self,
-            components: Union[IComponent, List[IComponent], str, List[str]]
+            components: ic_typing.IComponentKey
     ) -> List[Entity]:
         result = list()
         components = make_iterable(components)
@@ -33,7 +34,7 @@ class Supervisor:
 
     def create_entity(
             self,
-            components: Union[IComponent, Iterable[IComponent]] = None
+            components: ic_typing.IComponentTypeList = None
     ) -> Entity:
         entity = Entity()
         self.entities[entity.id] = entity
@@ -45,7 +46,7 @@ class Supervisor:
             self.components[component] -= components_set
         del self.entities[entity.id]
 
-    def add_components(self, entity, components: Union[IComponent, Iterable[IComponent]]):
+    def add_components(self, entity, components: ic_typing.IComponentTypeList):
         components = make_iterable(components)
         for component in components:
             if component not in self.components.keys():

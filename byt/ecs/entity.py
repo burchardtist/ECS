@@ -1,15 +1,13 @@
-from typing import Dict, Set, TYPE_CHECKING, Union
+from typing import Dict, Set, Union
 from uuid import UUID, uuid4
 
+from byt.middleware.typing import IComponentTypeVar
 from byt.middleware.utils import AttrsDict
-
-if TYPE_CHECKING:
-    from byt.ecs.component import IComponent
 
 
 class Entity:
-    id: UUID = None
-    components = None  # type: Dict[Union[IComponent, str], Set[IComponent]]
+    id: UUID
+    components: Dict[Union[IComponentTypeVar, str], Set[IComponentTypeVar]]
 
     def __init__(self) -> None:
         self.id = uuid4()

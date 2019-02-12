@@ -1,12 +1,14 @@
 from abc import ABC
 from dataclasses import dataclass, field
+from typing import Generic
 from uuid import UUID, uuid4
 
 from byt.ecs.entity import Entity
+from byt.middleware.typing import IComponentTypeVar
 
 
 @dataclass
-class IComponent(ABC):
+class IComponent(Generic[IComponentTypeVar], ABC):
     entity: Entity
     id: UUID = field(init=False)
 

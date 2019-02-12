@@ -31,7 +31,9 @@ class AttrsDict(collections.MutableMapping):
     def __len__(self):
         return len(self.store)
 
-    def __keytransform__(self, key):
+    def __keytransform__(self, key: Any) -> str:
+        if isinstance(key, type):
+            return key.__name__
         if not isinstance(key, str):
-            key = key.__class__.__name__
+            return key.__class__.__name__
         return key
