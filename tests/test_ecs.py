@@ -1,7 +1,7 @@
 import collections
+from dataclasses import dataclass
 from uuid import UUID
 
-import attr
 import pytest
 
 from byt.ecs.component import IComponent
@@ -14,21 +14,21 @@ TEST_NAME = 'NameSystemTest'
 
 
 # COMPONENTS
-@attr.s(slots=True, hash=True)
+@dataclass(eq=False)
 class Name(IComponent):
-    name = attr.ib(type=str)
+    name: str
 
 
-@attr.s(slots=True, hash=True)
+@dataclass(eq=False)
 class Position(IComponent):
-    x = attr.ib(type=int)
-    y = attr.ib(type=int)
+    x: int
+    y: int
 
 
-@attr.s(slots=True, hash=True)
+@dataclass(eq=False)
 class FooBar(IComponent):
-    foo = attr.ib(type=bool)
-    bar = attr.ib(type=bool)
+    foo: bool
+    bar: bool
 
 
 # SYSTEMS

@@ -1,16 +1,20 @@
 from abc import ABC
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
-
-import attr
 
 from byt.ecs.entity import Entity
 
 
-@attr.s(slots=True)
+@dataclass
 class IComponent(ABC):
-    entity = attr.ib(type=Entity)  # todo: default=None
-    id = attr.ib(init=False)
+    entity: Entity
+    id: UUID = field(init=False)
 
-    @id.default
-    def _init_id(self) -> UUID:
-        return uuid4()
+    def __post_init__(self):
+        self.id = uuid4()
+
+    def __hash__(self):
+        return self.id.int
+
+    def __eq__(self, other):
+        return self.id == getattr(other, 'id', None)
