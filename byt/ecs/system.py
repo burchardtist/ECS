@@ -1,18 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import Optional
 
-if TYPE_CHECKING:
-    from byt.middleware.supervisor import Supervisor
+from byt.middleware.typing import TSuperVisor
 
 
 class ISystem(ABC):
-    engine = None  # type: Supervisor
-    priority: int = None
+    engine: Optional[TSuperVisor]
+    priority: int
 
     def __init__(self, priority: int=100) -> None:
         self.priority = priority
 
-    def set_engine(self, engine):
+    def set_engine(self, engine: TSuperVisor) -> None:
         self.engine = engine
 
     @abstractmethod

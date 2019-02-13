@@ -1,17 +1,16 @@
-from typing import Dict, List, Set, Type
+from typing import Dict, List, Optional, Type
 from uuid import UUID
 
 import byt.middleware.typing as ic_typing
-from byt.ecs.component import IComponent
 from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
 from byt.middleware.utils import AttrsDict, make_iterable
 
 
 class Supervisor:
-    entities: Dict[UUID, Entity] = None
-    components: Dict[IComponent, Set[IComponent]] = None
-    systems: List[ISystem] = None
+    entities: Dict[UUID, Entity]
+    components: AttrsDict
+    systems: List[ISystem]
 
     def __init__(self):
         self.entities = dict()
@@ -34,11 +33,14 @@ class Supervisor:
 
     def create_entity(
             self,
-            components: ic_typing.IComponentTypeList = None
+            components: Optional[ic_typing.IComponentTypeList] = None
     ) -> Entity:
         entity = Entity()
         self.entities[entity.id] = entity
-        self.add_components(entity, components)
+
+        if components:
+            self.add_components(entity, components)
+
         return entity
 
     def remove_entity(self, entity: Entity):

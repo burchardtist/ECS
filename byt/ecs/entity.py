@@ -1,13 +1,11 @@
-from typing import Dict, Set, Union
 from uuid import UUID, uuid4
 
-from byt.middleware.typing import IComponentTypeVar
 from byt.middleware.utils import AttrsDict
 
 
 class Entity:
     id: UUID
-    components: Dict[Union[IComponentTypeVar, str], Set[IComponentTypeVar]]
+    components: AttrsDict
 
     def __init__(self) -> None:
         self.id = uuid4()
