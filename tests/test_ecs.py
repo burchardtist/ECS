@@ -33,8 +33,8 @@ class FooBar(IComponent):
 
 # SYSTEMS
 class PositionSystem(ISystem):
-    def process(self, *args, **kwargs):
-        position_entities = self.engine.get_components_intersection(Position)
+    def process(self, engine, *args, **kwargs):
+        position_entities = engine.get_components_intersection(Position)
         for entity in position_entities:
             for position in entity.components[Position]:
                 position.x += 1
@@ -42,8 +42,8 @@ class PositionSystem(ISystem):
 
 
 class NameSystem(ISystem):
-    def process(self, *args, **kwargs):
-        name_entities = self.engine.get_components_intersection(Name)
+    def process(self, engine, *args, **kwargs):
+        name_entities = engine.get_components_intersection(Name)
         for entity in name_entities:
             for name in entity.components[Name]:
                 name.name = TEST_NAME

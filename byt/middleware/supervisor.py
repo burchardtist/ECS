@@ -56,14 +56,13 @@ class Supervisor:
             self.components[component].add(component)
             entity.add_component(component)
 
-    def remove_components(self, components):
+    def remove_components(self, components) -> None:
         components = make_iterable(components)
         for component in components:
             self.components[component].remove(component)
             component.entity.remove_component(component)
 
     def add_system(self, system: ISystem) -> None:
-        system.set_engine(self)
         self.systems.append(system)
         self.systems.sort(key=lambda x: x.priority, reverse=True)
 
@@ -72,4 +71,4 @@ class Supervisor:
 
     def execute_system(self, system: Type[ISystem], *args, **kwargs) -> None:
         system_instance = next(s for s in self.systems if isinstance(s, system))
-        system_instance.process(*args, **kwargs)
+        system_instance.process(engine=self, *args, **kwargs)
