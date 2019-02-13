@@ -1,4 +1,3 @@
-import collections
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -36,7 +35,7 @@ class PositionSystem(ISystem):
     def process(self, engine, *args, **kwargs):
         position_entities = engine.get_components_intersection(Position)
         for entity in position_entities:
-            for position in entity.components[Position]:
+            for position in entity.components.get_group(Position):
                 position.x += 1
                 position.y += 1
 
@@ -45,7 +44,7 @@ class NameSystem(ISystem):
     def process(self, engine, *args, **kwargs):
         name_entities = engine.get_components_intersection(Name)
         for entity in name_entities:
-            for name in entity.components[Name]:
+            for name in entity.components.get_group(Name):
                 name.name = TEST_NAME
 
 
@@ -72,14 +71,14 @@ def test_create_entity(engine):
     entity = engine.create_entity()
     assert isinstance(entity, Entity)
     assert isinstance(entity.id, UUID)
-    assert isinstance(entity.components, collections.MutableMapping)
-    assert not entity.components
+    assert not entity.components.get_all()
 
 
 def test_populated_supervisor(populated_engine):
     assert len(populated_engine.entities) == ENTITIES_COUNT
-    for value in populated_engine.components.values():
+    for _, value in populated_engine.component_manager.get_all():
         assert len(value) == ENTITIES_COUNT
+    assert populated_engine.component_manager.group_len(FooBar) == 0
 
     entity_ids = [x for x in populated_engine.entities]
     for entity_id in entity_ids:
@@ -87,7 +86,7 @@ def test_populated_supervisor(populated_engine):
         populated_engine.remove_entity(entity)
 
     assert len(populated_engine.entities) == 0
-    for value in populated_engine.components.values():
+    for _, value in populated_engine.component_manager.get_all():
         assert len(value) == 0
 
 
@@ -97,16 +96,15 @@ def test_remove_component(engine):
     engine.add_components(entity, name)
 
     assert len(engine.entities) == 1
-    assert len(engine.components[name]) == 1
-    assert len(entity.components[name]) == 1
-    assert name in entity.components[name]
-
+    assert engine.component_manager.group_len(name) == 1
+    assert entity.components.group_len(name) == 1
+    assert name in list(entity.components.get_group(name))
     engine.remove_components(name)
 
     assert len(engine.entities) == 1
-    assert len(engine.components[name]) == 0
-    assert len(entity.components[name]) == 0
-    assert name not in entity.components[name]
+    assert engine.component_manager.group_len(name) == 0
+    assert entity.components.group_len(name) == 0
+    assert name not in list(entity.components.get_group(name))
 
 
 def test_components_intersection(populated_engine):
@@ -122,7 +120,7 @@ def test_components_intersection(populated_engine):
 
     foobar_set = populated_engine.get_components_intersection(FooBar)
     assert len(foobar_set) == 100
-    assert all(x.components[FooBar] for x in foobar_set)
+    assert all(list(x.components.get_group(FooBar)) for x in foobar_set)
 
     for entity in list(populated_engine.entities.values())[:100]:
         foobar = FooBar(foo=True, bar=False, entity=entity)
@@ -135,8 +133,10 @@ def test_components_intersection(populated_engine):
         [FooBar, Name]
     )
     assert len(foobar_name_set) == 100
+
     assert all(
-        x.components[FooBar] and x.components[Name] for x in foobar_name_set
+        x.components.group_len(FooBar) == 1 and x.components.group_len(Name) == 1
+        for x in foobar_name_set
     )
 
 
@@ -144,7 +144,8 @@ def test_system(populated_engine):
     populated_engine.add_system(NameSystem())
     populated_engine.execute_system(NameSystem)
     for entity in populated_engine.entities.values():
-        assert all(x.name == TEST_NAME for x in entity.components[Name])
+        components = list(entity.components.get_group(Name))
+        assert all(x.name == TEST_NAME for x in components)
 
 
 def test_remove_system(engine):

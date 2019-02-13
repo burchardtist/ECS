@@ -4,17 +4,18 @@ from uuid import UUID
 import byt.middleware.typing as ic_typing
 from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
-from byt.middleware.utils import AttrsDict, make_iterable
+from byt.middleware.component_manager import ComponentManager
+from byt.middleware.utils import make_iterable
 
 
 class Supervisor:
     entities: Dict[UUID, Entity]
-    components: AttrsDict
+    component_manager: ComponentManager
     systems: List[ISystem]
 
     def __init__(self):
         self.entities = dict()
-        self.components = AttrsDict()
+        self.component_manager = ComponentManager()
         self.systems = list()
 
     def get_entity(self, entity_id: UUID) -> Entity:
@@ -27,7 +28,7 @@ class Supervisor:
         result = list()
         components = make_iterable(components)
         for entity in self.entities.values():
-            if all([entity.components.get(x) for x in components]):
+            if entity.components.has_all(components):
                 result.append(entity)
         return result
 
@@ -44,23 +45,24 @@ class Supervisor:
         return entity
 
     def remove_entity(self, entity: Entity):
-        for component, components_set in entity.components.items():
-            self.components[component] -= components_set
+        entity_components = entity.components.get_all()
+        self.component_manager.bulk_remove(entity_components)
         del self.entities[entity.id]
 
     def add_components(self, entity, components: ic_typing.IComponentTypeList):
         components = make_iterable(components)
         for component in components:
-            if component not in self.components.keys():
-                self.components[component] = set()
-            self.components[component].add(component)
-            entity.add_component(component)
+            self.component_manager.add(component)
+            self._entity_add_component(entity, component)
 
     def remove_components(self, components) -> None:
         components = make_iterable(components)
         for component in components:
-            self.components[component].remove(component)
-            component.entity.remove_component(component)
+            self.component_manager.remove(component)
+            component.entity.components.remove(component)
+
+    def _entity_add_component(self, entity, component):
+        entity.components.add(component)
 
     def add_system(self, system: ISystem) -> None:
         self.systems.append(system)
