@@ -62,6 +62,7 @@ class Supervisor:
             component.entity.components.remove(component)
 
     def _entity_add_component(self, entity, component):
+        # todo: remove components on entity
         entity.components.add(component)
 
     def add_system(self, system: ISystem) -> None:

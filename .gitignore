@@ -5,3 +5,6 @@ venv/*
 *.sqlite
 .mypy_cache/*
 build
+
+htmlcov/
+.coverage
