@@ -7,3 +7,6 @@ omit =
     */tests/*
     *__init__.py
     ./setup.py
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
