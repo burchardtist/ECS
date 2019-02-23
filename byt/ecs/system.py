@@ -9,4 +9,4 @@ class ISystem(ABC):
 
     @abstractmethod
     def process(self, engine, *args, **kwargs) -> None:
-        pass
+        raise NotImplementedError
