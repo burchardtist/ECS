@@ -25,6 +25,14 @@ class ManyRelation(Relation):
 
 @dataclass(frozen=True)
 class OneRelation(Relation):
+    """
+    substitution - able to set if relation doesn't exist or is None but cannot
+    replace object with another object.
+
+    If substitution is False only way to set another relation is remove old
+    and then add new.
+    """
+
     to_type: type
-    frozen: bool = True
+    substitution: bool = False
     relation_type: str = field(default='one', init=False)

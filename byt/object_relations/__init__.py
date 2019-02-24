@@ -1,7 +1,7 @@
 """
 TODO:
- - remove objects
+ - substitution
  - mypy
- - tests: one to many, one to one, many to many, coverage, inherit from IHouse
+ - tests: one to one, many to many, inherit from IHouse
  - multiple relations
 """

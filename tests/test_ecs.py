@@ -8,7 +8,7 @@ from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
 from byt.middleware.supervisor import Supervisor
 
-ENTITIES_COUNT = 5000
+ENTITIES_COUNT = 100
 TEST_NAME = 'NameSystemTest'
 
 
