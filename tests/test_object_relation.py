@@ -7,7 +7,7 @@ from byt.object_relations.error import ManySameRelationsError, \
     MissingRelationError, SubstitutionNotAllowedError
 from byt.object_relations.relations import ManyRelation, OneRelation
 
-SAMPLE_SIZE = 2
+SAMPLE_SIZE = 50
 
 
 # FIXTURES
