@@ -4,10 +4,10 @@ import pytest
 
 from byt.object_relations.control import ObjectRelation
 from byt.object_relations.error import ManySameRelationsError, \
-    SubstitutionNotAllowedError, MissingRelationError
+    MissingRelationError, SubstitutionNotAllowedError
 from byt.object_relations.relations import ManyRelation, OneRelation
 
-SAMPLE_SIZE = 30
+SAMPLE_SIZE = 2
 
 
 # FIXTURES
@@ -120,20 +120,34 @@ def test_multiple_relations(orm: ObjectRelation):
     with pytest.raises(ManySameRelationsError):
         orm.add(person, house)
 
-# todo
-# def test_substitution_relation(substitution_relation_orm: TestObjects):
-#     orm, person, houses = substitution_relation_orm
-#
-#     another_person = Person()
-#     house = houses.pop()
-#
-#     orm.add(another_person, house)
-#     assert all([orm.get(house.person) is person for house in houses])
-#     assert house not in orm.get(person.houses)
-#     assert len(orm.get(person.houses)) == SAMPLE_SIZE - 1
-#     assert house in orm.get(another_person.houses)
-#     assert orm.get(house.person) is another_person
-#     assert orm.get(house.person) is not person
+
+def _test_substitution(orm, house, houses, person, another_person):
+    assert all([orm.get(house.person) is person for house in houses])
+    assert house not in orm.get(person.houses)
+    assert len(orm.get(person.houses)) == SAMPLE_SIZE - 1
+    assert house in orm.get(another_person.houses)
+    assert orm.get(house.person) is another_person
+    assert orm.get(house.person) is not person
+
+
+def test_substitution_relation(substitution_relation_orm: TestObjects):
+    orm, person, houses = substitution_relation_orm
+
+    another_person = Person()
+    house = houses.pop()
+
+    orm.add(another_person, house)
+    _test_substitution(orm, house, houses, person, another_person)
+
+
+def test_substitution_relation_reverted(substitution_relation_orm: TestObjects):
+    orm, person, houses = substitution_relation_orm
+
+    another_person = Person()
+    house = houses.pop()
+
+    orm.add(house, another_person)
+    _test_substitution(orm, house, houses, person, another_person)
 
 
 def test_substitution_not_allowed_relation(populated_orm: TestObjects):
