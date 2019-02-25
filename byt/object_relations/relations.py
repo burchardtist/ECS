@@ -13,14 +13,12 @@ __all__ = [
 @dataclass(frozen=True)
 class Relation(ABC):
     to_type: type
-    relation_type: str
     id: UUID = field(default_factory=uuid4, init=False)
 
 
 @dataclass(frozen=True)
 class ManyRelation(Relation):
-    to_type: type
-    relation_type: str = field(default='many', init=False)
+    pass
 
 
 @dataclass(frozen=True)
@@ -33,6 +31,4 @@ class OneRelation(Relation):
     and then add new.
     """
 
-    to_type: type
     substitution: bool = False
-    relation_type: str = field(default='one', init=False)

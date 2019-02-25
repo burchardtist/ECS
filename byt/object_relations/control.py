@@ -29,7 +29,7 @@ class ObjectRelation:
     @method_dispatch
     def _add_relation(self, relation: Relation, related: object):
         raise InvalidRelationError(  # pragma: no cover
-            f'invalid relation `{relation.relation_type}`'
+            f'invalid relation `{type(relation)}`'
         )
 
     @_add_relation.register
@@ -71,7 +71,7 @@ class ObjectRelation:
     @method_dispatch
     def _remove_relation(self, relation: Relation, related: object):
         raise InvalidRelationError(  # pragma: no cover
-            f'invalid relation `{relation.relation_type}`'
+            f'invalid relation `{type(relation)}`'
         )
 
     @_remove_relation.register
