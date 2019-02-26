@@ -1,7 +1,7 @@
 from typing import Dict, List, Set, Type
 from uuid import UUID
 
-import byt.middleware.typing as ic_typing
+import byt.middleware.typing as t
 from byt.ecs.component import IComponent
 from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
@@ -20,7 +20,7 @@ class Supervisor:
 
     def get_components_intersection(
             self,
-            components: ic_typing.IComponentKey
+            components: t.IComponentKey
     ) -> Set[Entity]:
         components = make_iterable(components)
         entity_sets = list()
@@ -43,7 +43,7 @@ class Supervisor:
             self.orm.remove(entity, component)
         del self.entities[entity.id]
 
-    def get_entity_components(self, entity: Entity) -> Dict[type, Set[IComponent]]:
+    def get_entity_components(self, entity: Entity) -> Dict[Type, Set[IComponent]]:
         components = self.orm.get_relation(entity.components) or list()
         result = dict()
         for component in components:
@@ -53,13 +53,13 @@ class Supervisor:
             result[component_type].add(component)
         return result
 
-    def get_components(self, component: type) -> Set[IComponent]:
+    def get_components(self, component: Type[IComponent]) -> Set[IComponent]:
         return self.orm.get_type(component)
 
     def get_component_entity(self, component: IComponent) -> Set[Entity]:
         return self.orm.get_relation(component.entity)
 
-    def add_components(self, entity, components: ic_typing.IComponentTypeList):
+    def add_components(self, entity, components: t.IterableIComponent):
         components = make_iterable(components)
         for component in components:
             self.orm.add(entity, component)

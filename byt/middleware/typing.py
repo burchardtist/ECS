@@ -1,10 +1,12 @@
-from typing import Iterable, List, Type, Union
+from typing import Iterable, Union
 
-IComponentType = Type['IComponent']
-IComponentTypeList = Iterable[IComponentType]
-IComponentUnion = Union[IComponentType, IComponentTypeList]
+from byt.ecs.component import IComponent
 
-StringList = List[str]
-StringUnion = Union[str, StringList]
+__all__ = [
+    'IterableIComponent',
+    'IComponentKey',
+]
 
-IComponentKey = Union[IComponentUnion, StringUnion]
+
+IterableIComponent = Iterable[IComponent]
+IComponentKey = Union[IComponent, IterableIComponent]

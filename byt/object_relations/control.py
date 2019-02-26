@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Set
 from uuid import UUID
 
+import byt.object_relations.typing as t
 from byt.object_relations.error import InvalidRelationError, \
     ManySameRelationsError, MissingRelationError, SubstitutionNotAllowedError
 from byt.object_relations.relations import ManyRelation, OneRelation, Relation
@@ -26,7 +27,7 @@ class RelationOperationsDispatcher(ABC):
     """
 
     def __init__(self):
-        self._container: Dict[UUID, Set[object]] = dict()
+        self._container: Dict[UUID, Set[t.Object]] = dict()
 
     # GET #####################################################################
     @method_dispatch
@@ -36,23 +37,23 @@ class RelationOperationsDispatcher(ABC):
         )
 
     @get_relation.register
-    def _get_many(self, relation: ManyRelation) -> Set[object]:
+    def _get_many(self, relation: ManyRelation) -> Optional[Set[t.Object]]:
         return self._container.get(relation.id)
 
     @get_relation.register
-    def _get_one(self, relation: OneRelation) -> Optional[object]:
+    def _get_one(self, relation: OneRelation) -> Optional[t.Object]:
         obj = self._container.get(relation.id)
         return list(obj)[0] if obj else None
 
     # ADD #####################################################################
     @method_dispatch
-    def _add_relation(self, relation: Relation, related: object):
+    def _add_relation(self, relation: Relation, related: t.Object):
         raise InvalidRelationError(  # pragma: no cover
             f'invalid relation `{type(relation)}`'
         )
 
     @_add_relation.register
-    def _many_add(self, relation: ManyRelation, related: object):
+    def _many_add(self, relation: ManyRelation, related: t.Object):
         container = self._container
         id_ = relation.id
 
@@ -61,18 +62,18 @@ class RelationOperationsDispatcher(ABC):
         container[id_].add(related)
 
     @_add_relation.register
-    def _one_add(self, relation: OneRelation, related: object):
+    def _one_add(self, relation: OneRelation, related: t.Object):
         self._container[relation.id] = {related}
 
     # REMOVE ##################################################################
     @method_dispatch
-    def _remove_relation(self, relation: Relation, related: object):
+    def _remove_relation(self, relation: Relation, related: t.Object):
         raise InvalidRelationError(  # pragma: no cover
             f'invalid relation `{type(relation)}`'
         )
 
     @_remove_relation.register
-    def _many_remove(self, relation: ManyRelation, related: object):
+    def _many_remove(self, relation: ManyRelation, related: t.Object):
         container = self._container
         id_ = relation.id
         try:
@@ -81,7 +82,7 @@ class RelationOperationsDispatcher(ABC):
             raise MissingRelationError
 
     @_remove_relation.register
-    def _one_remove(self, relation: OneRelation, related: object):
+    def _one_remove(self, relation: OneRelation, related: t.Object):
         container = self._container
         id_ = relation.id
 
@@ -98,12 +99,12 @@ class ObjectsContainer(ABC):
     """
 
     def __init__(self):
-        self._objects: Dict[type, Set[object]] = dict()
+        self._objects: Dict[t.ObjectType, Set[t.Object]] = dict()
 
-    def get_type(self, type_: type) -> Set[object]:
+    def get_type(self, type_: t.ObjectType) -> Set[t.Object]:
         return self._objects.get(type_) or set()
 
-    def _add_objects(self, *objects: object):
+    def _add_objects(self, *objects: t.Object):
         objects_dict = self._objects
         for obj in objects:
             type_id = type(obj)
@@ -111,7 +112,7 @@ class ObjectsContainer(ABC):
                 objects_dict[type_id] = set()
             objects_dict[type_id].add(obj)
 
-    def _remove_objects(self, *objects: object):
+    def _remove_objects(self, *objects: t.Object):
         objects_dict = self._objects
         for obj in objects:
             objects_dict[type(obj)].remove(obj)
@@ -127,10 +128,10 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
         ObjectsContainer.__init__(self)
         self._relations: Dict[int, Relation] = dict()
 
-    def _seek_relations(self, obj: object) -> Relation:
+    def _seek_relations(self, obj: t.Object) -> Relation:
         return self._relations.get(id(obj)) or self._setup_relation(obj)
 
-    def _setup_relation(self, obj: object) -> Relation:
+    def _setup_relation(self, obj: t.Object) -> Relation:
         relations = {
             getattr(obj, x) for x in dir(obj)
             if isinstance(getattr(obj, x), Relation)
@@ -144,17 +145,17 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
 
         return relation
 
-    def _get_relations(self, obj1: object, obj2: object) -> RelationFields:
+    def _get_relations(self, obj1: t.Object1, obj2: t.Object2) -> RelationFields:
         return RelationFields(
             rel1=self._seek_relations(obj1),
             rel2=self._seek_relations(obj2),
         )
 
     def _ensure_substitution(
-            self,
-            obj1: object,
-            obj2: object,
-            relations: RelationFields
+        self,
+        obj1: t.Object1,
+        obj2: t.Object2,
+        relations: RelationFields
     ):
         """
         Provide substitution for one-to-many relation.
@@ -180,14 +181,14 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
             relation = self._relations[id(self.get_relation(one_relation))]
             self._remove_relation(relation, to_remove)
 
-    def add(self, obj1: object, obj2: object):
+    def add(self, obj1: t.Object1, obj2: t.Object2):
         relations = self._get_relations(obj1, obj2)
         self._ensure_substitution(obj1, obj2, relations)
         self._add_relation(relations.rel1, obj2)
         self._add_relation(relations.rel2, obj1)
         self._add_objects(obj1, obj2)
 
-    def remove(self, obj1: object, obj2: object):
+    def remove(self, obj1: t.Object1, obj2: t.Object2):
         relations = self._get_relations(obj1, obj2)
         self._remove_relation(relations.rel1, obj2)
         self._remove_relation(relations.rel2, obj1)
