@@ -29,6 +29,3 @@ class IComponent(ABC):
 
     def __hash__(self):
         return self._id.int
-
-    def __eq__(self, other):
-        return self._id == getattr(other, '_id', None)

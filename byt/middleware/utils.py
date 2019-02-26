@@ -1,11 +1,21 @@
-import collections
-from typing import Any, Iterable
+from functools import singledispatch
+from typing import Collection, List, TypeVar
+
+T = TypeVar('T')
 
 
-def make_iterable(obj: Any) -> Iterable:
-    if not obj:
-        return list()
+@singledispatch
+def make_iterable(obj: T) -> List[T]:
+    return [obj]
 
-    if not isinstance(obj, collections.Iterable) or isinstance(obj, str):
-        return [obj]
+
+@make_iterable.register
+def _none(obj: None) -> List:
+    return list()
+
+
+@make_iterable.register(list)
+@make_iterable.register(set)
+@make_iterable.register(tuple)
+def _iterable(obj) -> Collection[T]:
     return obj

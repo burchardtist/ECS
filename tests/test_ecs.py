@@ -82,6 +82,11 @@ def test_remove_entity(engine):
     assert len(engine.entities) == 0
 
 
+def test_get_entity(engine):
+    entity = engine.create_entity()
+    assert entity is engine.get_entity(entity.id)
+
+
 def test_remove_entity_with_components(engine):
     name = Name(TEST_NAME)
     position = Position(x=1, y=10)
@@ -184,6 +189,29 @@ def test_components_intersection_many(populated_engine):
         assert FooBar not in components
         assert Name in components
         assert Position in components
+
+
+def test_relation_setter(engine):
+    entity = engine.create_entity()
+    name = Name(name=TEST_NAME)
+
+    with pytest.raises(ValueError):
+        entity.components = name
+
+    with pytest.raises(ValueError):
+        name.entity = entity
+
+
+def test_component_eq(engine):
+    name1 = Name(name=TEST_NAME)
+    name2 = Name(name=TEST_NAME)
+
+    entity = engine.create_entity()
+    engine.add_components(entity, name1)
+    assert name1 != name2
+    assert name1 is not name2
+    assert name1 == engine.get_entity_components(entity)[Name].pop()
+    assert name1 is engine.get_entity_components(entity)[Name].pop()
 
 
 def test_system(populated_engine):
