@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RelationFields:
     rel1: Relation
     rel2: Relation
@@ -21,10 +21,12 @@ class RelationFields:
 class ObjectRelation:
     _container: Dict[UUID, Union[Set[object], object]]
     _relations: Dict[int, Relation]
+    _objects: Dict[int, Set[object]]
 
     def __init__(self):
         self._container = dict()
         self._relations = dict()
+        self._objects = dict()
 
     @method_dispatch
     def _add_relation(self, relation: Relation, related: object):
@@ -93,7 +95,12 @@ class ObjectRelation:
         except KeyError:
             raise MissingRelationError
 
-    def _ensure_substitution(self, obj1, obj2, relations):
+    def _ensure_substitution(
+            self,
+            obj1: object,
+            obj2: object,
+            relations: RelationFields
+    ):
         if (isinstance(relations.rel1, OneRelation) and
                 isinstance(relations.rel2, ManyRelation)):
             one_relation = relations.rel1
@@ -108,19 +115,37 @@ class ObjectRelation:
         if self._container.get(one_relation.id):
             if not one_relation.substitution:
                 raise SubstitutionNotAllowedError
-            relation = self._relations[id(self.get(one_relation))]
+            relation = self._relations[id(self.get_relation(one_relation))]
             self._remove_relation(relation, to_remove)
 
-    def get(self, relation: Relation):
+    def _add_objects(self, *objects: object):
+        objects_dict = self._objects
+        for obj in objects:
+            type_id = id(type(obj))
+            if type_id not in objects_dict.keys():
+                objects_dict[type_id] = set()
+            objects_dict[type_id].add(obj)
+
+    def _remove_objects(self, *objects: object):
+        objects_dict = self._objects
+        for obj in objects:
+            objects_dict[id(type(obj))].remove(obj)
+
+    def get_relation(self, relation: Relation):
         return self._container.get(relation.id)
+    
+    def get_type(self, type_: type) -> Set:
+        return self._objects.get(id(type_)) or list()
 
     def add(self, obj1: object, obj2: object):
         relations = self._get_relations(obj1, obj2)
         self._ensure_substitution(obj1, obj2, relations)
         self._add_relation(relations.rel1, obj2)
         self._add_relation(relations.rel2, obj1)
+        self._add_objects(obj1, obj2)
 
     def remove(self, obj1: object, obj2: object):
         relations = self._get_relations(obj1, obj2)
         self._remove_relation(relations.rel1, obj2)
         self._remove_relation(relations.rel2, obj1)
+        self._remove_objects(obj1, obj2)

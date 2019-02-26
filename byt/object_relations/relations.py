@@ -18,7 +18,7 @@ class Relation(ABC):
 
 @dataclass(frozen=True)
 class ManyRelation(Relation):
-    pass
+    to_type: type
 
 
 @dataclass(frozen=True)
@@ -30,5 +30,5 @@ class OneRelation(Relation):
     If substitution is False only way to set another relation is remove old
     and then add new.
     """
-
+    to_type: type
     substitution: bool = False

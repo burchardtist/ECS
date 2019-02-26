@@ -86,32 +86,61 @@ def test_unique_id():
     assert len(ids) == SAMPLE_SIZE
 
 
-def test_get(orm):
+def test_get_relation(orm):
     person = Person()
     house = IHouse()
 
-    assert orm.get(person.houses) is None
+    assert orm.get_relation(person.houses) is None
+
     orm.add(person, house)
-    assert len(orm.get(person.houses)) == 1
+    houses = list(orm.get_relation(person.houses))
+    assert len(houses) == 1
+    assert houses[0] is house
+    house_person = orm.get_relation(house.person)
+    assert house_person
+    assert house_person is person
+
+    orm.remove(person, house)
+    assert len(orm.get_relation(person.houses)) == 0
+    assert not orm.get_relation(house.person)
+
+
+def test_get_type(orm):
+    person = Person()
+    house = IHouse()
+
+    assert orm.get_relation(person.houses) is None
+
+    orm.add(person, house)
+    person_list = list(orm.get_type(Person))
+    house_list = list(orm.get_type(IHouse))
+    assert len(person_list) == 1
+    assert person_list[0] is person
+    assert len(house_list) == 1
+    assert house_list[0] is house
+
+    orm.remove(person, house)
+    assert len(orm.get_type(Person)) == 0
+    assert len(orm.get_type(IHouse)) == 0
 
 
 def test_add(populated_orm: TestObjects):
     orm, person, houses = populated_orm
 
-    assert len(orm.get(person.houses)) == SAMPLE_SIZE
-    assert all([orm.get(house.person) is person for house in houses])
+    assert len(orm.get_relation(person.houses)) == SAMPLE_SIZE
+    assert all([orm.get_relation(house.person) is person for house in houses])
 
 
 def test_remove(populated_orm: TestObjects):
     orm, person, houses = populated_orm
 
     house = houses[0]
-    assert orm.get(house.person) is person
+    assert orm.get_relation(house.person) is person
 
     orm.remove(person, house)
-    assert orm.get(house.person) is None
-    assert len(orm.get(person.houses)) == SAMPLE_SIZE - 1
-    assert house not in orm.get(person.houses)
+    assert orm.get_relation(house.person) is None
+    assert len(orm.get_relation(person.houses)) == SAMPLE_SIZE - 1
+    assert house not in orm.get_relation(person.houses)
 
 
 def test_multiple_relations(orm: ObjectRelation):
@@ -122,12 +151,12 @@ def test_multiple_relations(orm: ObjectRelation):
 
 
 def _test_substitution(orm, house, houses, person, another_person):
-    assert all([orm.get(house.person) is person for house in houses])
-    assert house not in orm.get(person.houses)
-    assert len(orm.get(person.houses)) == SAMPLE_SIZE - 1
-    assert house in orm.get(another_person.houses)
-    assert orm.get(house.person) is another_person
-    assert orm.get(house.person) is not person
+    assert all([orm.get_relation(house.person) is person for house in houses])
+    assert house not in orm.get_relation(person.houses)
+    assert len(orm.get_relation(person.houses)) == SAMPLE_SIZE - 1
+    assert house in orm.get_relation(another_person.houses)
+    assert orm.get_relation(house.person) is another_person
+    assert orm.get_relation(house.person) is not person
 
 
 def test_substitution_relation(substitution_relation_orm: TestObjects):
