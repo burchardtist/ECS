@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Set, Union
+from typing import Dict, Set, Optional
 from uuid import UUID
 
 from byt.object_relations.error import InvalidRelationError, \
@@ -19,14 +19,10 @@ class RelationFields:
 
 
 class ObjectRelation:
-    _container: Dict[UUID, Union[Set[object], object]]  # todo Set[object] nawet dla OneRelation
-    _relations: Dict[int, Relation]
-    _objects: Dict[int, Set[object]]
-
     def __init__(self):
-        self._container = dict()
-        self._relations = dict()
-        self._objects = dict()
+        self._container: Dict[UUID, Set[object]] = dict()
+        self._relations: Dict[int, Relation] = dict()
+        self._objects: Dict[int, Set[object]] = dict()
 
     @method_dispatch
     def _add_relation(self, relation: Relation, related: object):
@@ -45,7 +41,7 @@ class ObjectRelation:
 
     @_add_relation.register
     def _one_add(self, relation: OneRelation, related: object):
-        self._container[relation.id] = related  # todo: {related}
+        self._container[relation.id] = {related}
 
     def _seek_relations(self, obj: object) -> Relation:
         return self._relations.get(id(obj)) or self._setup_relation(obj)
@@ -131,10 +127,22 @@ class ObjectRelation:
         for obj in objects:
             objects_dict[id(type(obj))].remove(obj)
 
-    def get_relation(self, relation: Relation) -> Union[Set[object], object]: # todo Set[object]
+    @method_dispatch
+    def get_relation(self, relation: Relation):
+        raise InvalidRelationError(  # pragma: no cover
+            f'invalid relation `{type(relation)}`'
+        )
+
+    @get_relation.register
+    def _get_many(self, relation: ManyRelation) -> Set[object]:
         return self._container.get(relation.id)
+
+    @get_relation.register
+    def _get_one(self, relation: OneRelation) -> Optional[object]:
+        obj = self._container.get(relation.id)
+        return list(obj)[0] if obj else None
     
-    def get_type(self, type_: type) -> Set:
+    def get_type(self, type_: type) -> Set[object]:
         return self._objects.get(id(type_)) or set()
 
     def add(self, obj1: object, obj2: object):
