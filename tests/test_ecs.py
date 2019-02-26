@@ -9,6 +9,7 @@ from byt.ecs.system import ISystem
 from byt.middleware.supervisor import Supervisor
 
 ENTITIES_COUNT = 100
+INTERSECTION_SAMPLE_COUNT = 10
 TEST_NAME = 'NameSystemTest'
 
 
@@ -35,7 +36,7 @@ class PositionSystem(ISystem):
     def process(self, engine, *args, **kwargs):
         position_entities = engine.get_components_intersection(Position)
         for entity in position_entities:
-            for position in entity.components.get_group(Position):
+            for position in engine.get_entity_components(entity)[Position]:
                 position.x += 1
                 position.y += 1
 
@@ -44,7 +45,7 @@ class NameSystem(ISystem):
     def process(self, engine, *args, **kwargs):
         name_entities = engine.get_components_intersection(Name)
         for entity in name_entities:
-            for name in entity.components.get_group(Name):
+            for name in engine.get_entity_components(entity)[Name]:
                 name.name = TEST_NAME
 
 
@@ -60,8 +61,8 @@ def populated_engine():
     engine = Supervisor()
     for i in range(1, ENTITIES_COUNT+1):
         entity = engine.create_entity()
-        name = Name(name=f'component_{i}', entity=entity)
-        position = Position(x=i, y=i+2, entity=entity)
+        name = Name(name=f'component_{i}')
+        position = Position(x=i, y=i+2)
         engine.add_components(entity, [name, position])
     return engine
 
@@ -71,81 +72,106 @@ def test_create_entity(engine):
     entity = engine.create_entity()
     assert isinstance(entity, Entity)
     assert isinstance(entity.id, UUID)
-    assert not entity.components.get_all()
+    assert len(engine.get_entity_components(entity)) == 0
 
 
-def test_populated_supervisor(populated_engine):
-    assert len(populated_engine.entities) == ENTITIES_COUNT
-    for _, value in populated_engine.component_manager.get_all():
-        assert len(value) == ENTITIES_COUNT
-    assert populated_engine.component_manager.group_len(FooBar) == 0
-
-    entity_ids = [x for x in populated_engine.entities]
-    for entity_id in entity_ids:
-        entity = populated_engine.get_entity(entity_id)
-        populated_engine.remove_entity(entity)
-
-    assert len(populated_engine.entities) == 0
-    for _, value in populated_engine.component_manager.get_all():
-        assert len(value) == 0
-
-
-def test_remove_component(engine):
+def test_add_and_remove_component(engine):
     entity = engine.create_entity()
-    name = Name(name='test', entity=entity)
+    name = Name(name='test')
     engine.add_components(entity, name)
 
+    name_components = engine.get_components(Name)
+    entity_components = engine.get_entity_components(entity)
     assert len(engine.entities) == 1
-    assert engine.component_manager.group_len(name) == 1
-    assert entity.components.group_len(name) == 1
-    assert name in list(entity.components.get_group(name))
+    assert len(name_components) == 1
+    assert len(entity_components) == 1
+    assert name in name_components
+    assert name in entity_components[Name]
+
     engine.remove_components(name)
-
+    name_components = engine.get_components(Name)
+    entity_components = engine.get_entity_components(entity)
     assert len(engine.entities) == 1
-    assert engine.component_manager.group_len(name) == 0
-    assert entity.components.group_len(name) == 0
-    assert name not in list(entity.components.get_group(name))
+    assert len(name_components) == 0
+    assert len(entity_components) == 0
+    assert name not in name_components
+    assert not entity_components
 
 
-def test_components_intersection(populated_engine):
-    assert not populated_engine.get_components_intersection(FooBar)
-    assert not populated_engine.get_components_intersection(
-        [FooBar, Name, Position]
-    )
+def test_components_intersection(engine):
+    assert not engine.get_components_intersection(FooBar)
+    assert not engine.get_components_intersection([FooBar, Name, Position])
 
-    for _ in range(0, 100):
-        entity = populated_engine.create_entity()
-        foobar = FooBar(foo=True, bar=False, entity=entity)
-        populated_engine.add_components(entity, foobar)
+    new_entities = list()
+    for _ in range(INTERSECTION_SAMPLE_COUNT):
+        entity = engine.create_entity()
+        new_entities.append(entity)
+        foobar = FooBar(foo=True, bar=False)
+        engine.add_components(entity, foobar)
 
-    foobar_set = populated_engine.get_components_intersection(FooBar)
-    assert len(foobar_set) == 100
-    assert all(list(x.components.get_group(FooBar)) for x in foobar_set)
+    foobar_set = engine.get_components_intersection(FooBar)
+    assert len(foobar_set) == INTERSECTION_SAMPLE_COUNT
 
-    for entity in list(populated_engine.entities.values())[:100]:
-        foobar = FooBar(foo=True, bar=False, entity=entity)
-        populated_engine.add_components(entity, foobar)
+    for entity in new_entities:
+        components = engine.get_entity_components(entity)
+        foobar_component = components[FooBar].pop()
+        assert len(components) == 1
+        assert engine.get_component_entity(foobar_component) in foobar_set
 
-    foobar_set = populated_engine.get_components_intersection(FooBar)
-    assert len(foobar_set) == 200
 
-    foobar_name_set = populated_engine.get_components_intersection(
-        [FooBar, Name]
-    )
-    assert len(foobar_name_set) == 100
+def test_components_intersection_many(populated_engine):
+    engine = populated_engine
+    all_component_types = [Name, Position, FooBar]
 
-    assert all(
-        x.components.group_len(FooBar) == 1 and x.components.group_len(Name) == 1
-        for x in foobar_name_set
-    )
+    name_components = engine.get_components_intersection(Name)
+    assert len(name_components) == ENTITIES_COUNT
+
+    foobar_components = engine.get_components_intersection(FooBar)
+    assert len(foobar_components) == 0
+
+    name_foobar_components = engine.get_components_intersection([Name, FooBar])
+    assert len(name_foobar_components) == 0
+
+    part_of_entities = list(engine.entities.values())[:INTERSECTION_SAMPLE_COUNT]
+    other_entities = list(engine.entities.values())[INTERSECTION_SAMPLE_COUNT:]
+    for entity in part_of_entities:
+        foobar = FooBar(foo=True, bar=False)
+        engine.add_components(entity, foobar)
+
+    foobar_name_components = engine.get_components_intersection([FooBar, Name])
+    assert len(foobar_name_components) == INTERSECTION_SAMPLE_COUNT
+
+    all_components = engine.get_components_intersection(all_component_types)
+    assert len(all_components) == INTERSECTION_SAMPLE_COUNT
+
+    name_position_components = engine.get_components_intersection([Name, Position])
+    assert len(name_position_components) == ENTITIES_COUNT
+
+    for entity in part_of_entities:
+        components = engine.get_entity_components(entity)
+        assert len(components) == len(all_component_types)
+        name_component = components[Name].pop()
+        name_entity = engine.get_component_entity(name_component)
+        position_component = components[Position].pop()
+        position_entity = engine.get_component_entity(position_component)
+        assert name_entity in name_position_components
+        assert name_entity in foobar_name_components
+        assert position_entity in name_position_components
+
+    for entity in other_entities:
+        components = engine.get_entity_components(entity)
+        assert FooBar not in components
+        assert Name in components
+        assert Position in components
 
 
 def test_system(populated_engine):
-    populated_engine.add_system(NameSystem())
-    populated_engine.execute_system(NameSystem)
-    for entity in populated_engine.entities.values():
-        components = list(entity.components.get_group(Name))
-        assert all(x.name == TEST_NAME for x in components)
+    engine = populated_engine
+
+    engine.add_system(NameSystem())
+    engine.execute_system(NameSystem)
+    components = engine.get_components(Name)
+    assert all(x.name == TEST_NAME for x in components)
 
 
 def test_remove_system(engine):

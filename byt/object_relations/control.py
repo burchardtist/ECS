@@ -19,7 +19,7 @@ class RelationFields:
 
 
 class ObjectRelation:
-    _container: Dict[UUID, Union[Set[object], object]]
+    _container: Dict[UUID, Union[Set[object], object]]  # todo Set[object] nawet dla OneRelation
     _relations: Dict[int, Relation]
     _objects: Dict[int, Set[object]]
 
@@ -45,21 +45,21 @@ class ObjectRelation:
 
     @_add_relation.register
     def _one_add(self, relation: OneRelation, related: object):
-        self._container[relation.id] = related
+        self._container[relation.id] = related  # todo: {related}
 
     def _seek_relations(self, obj: object) -> Relation:
         return self._relations.get(id(obj)) or self._setup_relation(obj)
 
     def _setup_relation(self, obj: object) -> Relation:
-        relations = [
+        relations = {
             getattr(obj, x) for x in dir(obj)
             if isinstance(getattr(obj, x), Relation)
-        ]
+        }
 
         if not len(relations) == 1:
             raise ManySameRelationsError
 
-        relation = relations[0]
+        relation = relations.pop()
         self._relations[id(obj)] = relation
 
         return relation
@@ -131,11 +131,11 @@ class ObjectRelation:
         for obj in objects:
             objects_dict[id(type(obj))].remove(obj)
 
-    def get_relation(self, relation: Relation):
+    def get_relation(self, relation: Relation) -> Union[Set[object], object]: # todo Set[object]
         return self._container.get(relation.id)
     
     def get_type(self, type_: type) -> Set:
-        return self._objects.get(id(type_)) or list()
+        return self._objects.get(id(type_)) or set()
 
     def add(self, obj1: object, obj2: object):
         relations = self._get_relations(obj1, obj2)

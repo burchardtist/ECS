@@ -1,12 +1,22 @@
 from uuid import UUID, uuid4
 
-from byt.middleware.component_manager import ComponentManager
+from byt.ecs.component import IComponent
+from byt.object_relations.relations import ManyRelation
+
+__all__ = [
+    'Entity',
+]
 
 
 class Entity:
-    id: UUID
-    components: ComponentManager
-
     def __init__(self) -> None:
-        self.id = uuid4()
-        self.components = ComponentManager()
+        self.id: UUID = uuid4()
+        self._components: ManyRelation = ManyRelation(to_type=IComponent)
+
+    @property
+    def components(self):
+        return self._components
+
+    @components.setter
+    def components(self, value):
+        raise ValueError('Use ORM instead of direct setter.')

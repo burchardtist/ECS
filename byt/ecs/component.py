@@ -2,19 +2,33 @@ from abc import ABC
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from byt.ecs.entity import Entity
+from byt.object_relations.relations import OneRelation
+
+__all__ = [
+    'IComponent',
+]
 
 
 @dataclass
 class IComponent(ABC):
-    entity: Entity
-    id: UUID = field(init=False)
+    _entity: OneRelation = field(init=False)
+    _id: UUID = field(init=False)
+
+    @property
+    def entity(self):
+        return self._entity
+
+    @entity.setter
+    def entity(self, value):
+        raise ValueError('Use ORM instead of direct setter.')
 
     def __post_init__(self):
-        self.id = uuid4()
+        from byt.ecs.entity import Entity  # todo: resolve cyclic import
+        self._id = uuid4()
+        self._entity = OneRelation(to_type=Entity)
 
     def __hash__(self):
-        return self.id.int
+        return self._id.int
 
     def __eq__(self, other):
-        return self.id == getattr(other, 'id', None)
+        return self._id == getattr(other, '_id', None)
