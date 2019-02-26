@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 import pytest
 
-from byt.object_relations.control import ObjectRelation
+from byt.object_relations.control import ObjectRelationManager
 from byt.object_relations.error import ManySameRelationsError, \
     MissingRelationError, SubstitutionNotAllowedError
 from byt.object_relations.relations import ManyRelation, OneRelation
@@ -13,12 +13,12 @@ SAMPLE_SIZE = 50
 # FIXTURES
 @pytest.fixture
 def orm():
-    return ObjectRelation()
+    return ObjectRelationManager()
 
 
 @pytest.fixture
 def populated_orm():
-    orm = ObjectRelation()
+    orm = ObjectRelationManager()
 
     person = Person()
     houses_list = list()
@@ -33,7 +33,7 @@ def populated_orm():
 
 @pytest.fixture
 def substitution_relation_orm():
-    orm = ObjectRelation()
+    orm = ObjectRelationManager()
 
     person = Person()
     houses_list = list()
@@ -77,7 +77,7 @@ class Person:
         self.houses = ManyRelation(to_type=IHouse)
 
 
-TestObjects = Tuple[ObjectRelation, Person, List[IHouse]]
+TestObjects = Tuple[ObjectRelationManager, Person, List[IHouse]]
 
 
 # TESTS
@@ -143,7 +143,7 @@ def test_remove(populated_orm: TestObjects):
     assert house not in orm.get_relation(person.houses)
 
 
-def test_multiple_relations(orm: ObjectRelation):
+def test_multiple_relations(orm: ObjectRelationManager):
     person = Person()
     house = ManyRelationsHouse()
     with pytest.raises(ManySameRelationsError):
