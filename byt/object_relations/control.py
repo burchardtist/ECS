@@ -192,4 +192,8 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
         relations = self._get_relations(obj1, obj2)
         self._remove_relation(relations.rel1, obj2)
         self._remove_relation(relations.rel2, obj1)
-        self._remove_objects(obj1, obj2)
+
+        if not self.get_relation(relations.rel1):
+            self._remove_objects(obj1)
+        if not self.get_relation(relations.rel2):
+            self._remove_objects(obj2)

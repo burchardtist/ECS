@@ -39,8 +39,8 @@ class Supervisor:
 
     def remove_entity(self, entity: Entity):
         entity_components = self.orm.get_relation(entity.components)
-        for component in entity_components:
-            self.orm.remove(entity, component)
+        if entity_components:
+            self.remove_components(entity_components.copy())
         del self.entities[entity.id]
 
     def get_entity_components(self, entity: Entity) -> Dict[Type, Set[IComponent]]:

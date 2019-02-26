@@ -75,6 +75,27 @@ def test_create_entity(engine):
     assert len(engine.get_entity_components(entity)) == 0
 
 
+def test_remove_entity(engine):
+    entity = engine.create_entity()
+    assert len(engine.entities) == 1
+    engine.remove_entity(entity)
+    assert len(engine.entities) == 0
+
+
+def test_remove_entity_with_components(engine):
+    name = Name(TEST_NAME)
+    position = Position(x=1, y=10)
+    entity = engine.create_entity()
+    engine.add_components(entity, [name, position])
+
+    assert len(engine.entities) == 1
+    assert len(engine.get_entity_components(entity)) == len([name, position])
+
+    engine.remove_entity(entity)
+    assert len(engine.entities) == 0
+    assert all([len(x) == 0 for x in engine.orm._objects.values()])
+
+
 def test_add_and_remove_component(engine):
     entity = engine.create_entity()
     name = Name(name='test')
