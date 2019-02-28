@@ -1,116 +1,12 @@
-from typing import List, Tuple
-
 import pytest
 
 from byt.object_relations.control import ObjectRelationManager
 from byt.object_relations.error import ManySameRelationsError, \
     MissingRelationError, SubstitutionNotAllowedError
-from byt.object_relations.relations import ManyRelation, OneRelation
-
-SAMPLE_SIZE = 50
-
-
-# FIXTURES
-@pytest.fixture
-def orm():
-    return ObjectRelationManager()
+from tests.object_relations.conftest import House, ManyRelationsHouse, Person, \
+    SAMPLE_SIZE, TestObjects
 
 
-@pytest.fixture
-def populated_orm():
-    orm = ObjectRelationManager()
-
-    person = Person()
-    houses_list = list()
-
-    for _ in range(SAMPLE_SIZE):
-        house = House()
-        houses_list.append(house)
-        orm.add(person, house)
-
-    return orm, person, houses_list
-
-
-@pytest.fixture
-def many_orm():
-    orm = ObjectRelationManager()
-
-    person = Person()
-    houses_list = list()
-
-    for _ in range(SAMPLE_SIZE):
-        house = House()
-        cabin = Cabin()
-        houses_list.append(house)
-        houses_list.append(cabin)
-        orm.add(person, house)
-        orm.add(person, cabin)
-
-    return orm, person, houses_list
-
-
-@pytest.fixture
-def substitution_relation_orm():
-    orm = ObjectRelationManager()
-
-    person = Person()
-    houses_list = list()
-
-    for _ in range(SAMPLE_SIZE):
-        house = SubstitutionHouse()
-        houses_list.append(house)
-        orm.add(person, house)
-
-    return orm, person, houses_list
-
-
-# TEST MODELS
-class IHouse:
-    person: OneRelation
-
-    def __init__(self):
-        self.person = OneRelation(to_type=Person)
-
-
-class House(IHouse):
-    pass
-
-
-class Cabin(IHouse):
-    pass
-
-
-class Cottage(IHouse):
-    pass
-
-
-class ManyRelationsHouse:
-    person_a: OneRelation
-    person_b: OneRelation
-
-    def __init__(self):
-        self.person_a = OneRelation(to_type=Person)
-        self.person_b = OneRelation(to_type=Person)
-
-
-class SubstitutionHouse:
-    person: OneRelation
-
-    def __init__(self):
-        self.person = OneRelation(to_type=Person, substitution=True)
-
-
-class Person:
-    houses: ManyRelation
-
-    def __init__(self):
-        self.houses = ManyRelation(to_type=IHouse)
-
-
-TestObjects = Tuple[ObjectRelationManager, Person, List[House]]
-
-
-# TESTS
 def test_unique_id():
     ids = {Person().houses.id for _ in range(SAMPLE_SIZE)}
     assert len(ids) == SAMPLE_SIZE
@@ -230,45 +126,3 @@ def test_missing_relation(populated_orm: TestObjects):
 
     with pytest.raises(MissingRelationError):
         orm.remove(another_house, person)
-
-
-def test_add_many_types(many_orm):
-    orm, person, houses = many_orm
-    total_size = SAMPLE_SIZE * len([House, Cabin])
-
-    assert len(houses) == total_size
-    assert not [x for x in houses if isinstance(x, Cottage)]
-
-    cottage = Cottage()
-    orm.add(person, cottage)
-    person_houses = orm.get_relation(person.houses)
-
-    assert len(person_houses) == total_size + 1
-    assert len([x for x in person_houses if isinstance(x, Cottage)]) == 1
-
-
-def test_get_many_types(many_orm):
-    orm, person, houses = many_orm
-
-    person_houses = orm.get_relation(person.houses)
-    cabins = [x for x in person_houses if isinstance(x, Cabin)]
-    houses = [x for x in person_houses if isinstance(x, House)]
-
-    assert all([orm.get_relation(house.person) is person for house in houses])
-    assert len(cabins) == SAMPLE_SIZE
-    assert len(houses) == SAMPLE_SIZE
-    assert len(person_houses) == len(cabins) + len(houses)
-
-
-def test_remove_many_types(many_orm):
-    orm, person, houses = many_orm
-
-    cabins = [x for x in houses if isinstance(x, Cabin)]
-
-    for cabin in cabins:
-        orm.remove(person, cabin)
-
-    person_houses = orm.get_relation(person.houses)
-    assert not [x for x in person_houses if isinstance(x, Cabin)]
-    assert len([x for x in person_houses if isinstance(x, House)]) == SAMPLE_SIZE
-    assert len(person_houses) == SAMPLE_SIZE
