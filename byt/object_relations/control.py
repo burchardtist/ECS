@@ -129,7 +129,7 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
         self._relations: Dict[int, Relation] = dict()
 
     def _seek_relations(self, obj: t.Object) -> Relation:
-        return self._relations.get(id(obj)) or self._setup_relation(obj)
+        return self._relations.get(obj) or self._setup_relation(obj)
 
     def _setup_relation(self, obj: t.Object) -> Relation:
         relations = {
@@ -141,7 +141,7 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
             raise ManySameRelationsError
 
         relation = relations.pop()
-        self._relations[id(obj)] = relation
+        self._relations[obj] = relation
 
         return relation
 
@@ -161,17 +161,17 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
             if not rel1.substitution or not rel2.substitution:
                 raise SubstitutionNotAllowedError
             if rel1_object:
-                relation = self._relations[id(rel1_object)]
+                relation = self._relations[rel1_object]
                 self._remove_relation(relation, None)
             if rel2_object:
-                relation = self._relations[id(rel2_object)]
+                relation = self._relations[rel2_object]
                 self._remove_relation(relation, None)
 
     def _one_to_many_substitution(self, one_relation, to_remove):
         if self.get_relation(one_relation):
             if not one_relation.substitution:
                 raise SubstitutionNotAllowedError
-            relation = self._relations[id(self.get_relation(one_relation))]
+            relation = self._relations[self.get_relation(one_relation)]
             self._remove_relation(relation, to_remove)
 
     def _ensure_substitution(
@@ -181,7 +181,7 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
         relations: RelationFields
     ):
         """
-        Provide substitution for one-to-many and one-to-one relations.
+        Provides substitution for one-to-many and one-to-one relations.
 
         If substitution is allowed and ManyRelation contains already
         the object to substitute remove it from this relation
