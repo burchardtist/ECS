@@ -132,3 +132,4 @@ class Ssn:
 
 # typing
 TestObjects = Tuple[ObjectRelationManager, Person, List[House]]
+TestPersonSsn = Tuple[ObjectRelationManager, SsnPerson, Ssn]
