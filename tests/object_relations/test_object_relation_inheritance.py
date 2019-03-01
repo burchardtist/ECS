@@ -1,7 +1,8 @@
-from tests.object_relations.conftest import Cabin, Cottage, House, SAMPLE_SIZE
+from tests.object_relations.conftest import Cabin, Cottage, House, SAMPLE_SIZE, \
+    TestObjects
 
 
-def test_add_many_types(many_orm):
+def test_add_many_types(many_orm: TestObjects):
     orm, person, houses = many_orm
     total_size = SAMPLE_SIZE * len([House, Cabin])
 
@@ -16,7 +17,7 @@ def test_add_many_types(many_orm):
     assert len([x for x in person_houses if isinstance(x, Cottage)]) == 1
 
 
-def test_get_many_types(many_orm):
+def test_get_many_types(many_orm: TestObjects):
     orm, person, houses = many_orm
 
     person_houses = orm.get_relation(person.houses)
@@ -29,7 +30,7 @@ def test_get_many_types(many_orm):
     assert len(person_houses) == len(cabins) + len(houses)
 
 
-def test_remove_many_types(many_orm):
+def test_remove_many_types(many_orm: TestObjects):
     orm, person, houses = many_orm
 
     cabins = [x for x in houses if isinstance(x, Cabin)]
