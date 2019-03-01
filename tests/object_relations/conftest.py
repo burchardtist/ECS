@@ -138,6 +138,16 @@ class SsnSubstitution:
         self.person: OneRelation = OneRelation(to_type=Person, substitution=True)
 
 
+class Book:
+    def __init__(self):
+        self.authors: ManyRelation = ManyRelation(to_type=Author)
+
+
+class Author:
+    def __init__(self):
+        self.books: ManyRelation = ManyRelation(to_type=Book)
+
+
 # typing
 TestObjects = Tuple[ObjectRelationManager, Person, List[House]]
 TestPersonSsn = Tuple[ObjectRelationManager, SsnPerson, Ssn]
