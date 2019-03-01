@@ -73,6 +73,17 @@ def one_orm():
     return orm, person, ssn
 
 
+@pytest.fixture
+def substitution_orm():
+    orm = ObjectRelationManager()
+
+    person = SsnPersonSubstitution()
+    ssn = SsnSubstitution()
+    orm.add(person, ssn)
+
+    return orm, person, ssn
+
+
 # Models
 class IHouse:
     def __init__(self):
@@ -117,6 +128,19 @@ class Ssn:
         self.person: OneRelation = OneRelation(to_type=Person)
 
 
+class SsnPersonSubstitution:
+    def __init__(self):
+        self.ssn: OneRelation = OneRelation(to_type=Ssn, substitution=True)
+
+
+class SsnSubstitution:
+    def __init__(self):
+        self.person: OneRelation = OneRelation(to_type=Person, substitution=True)
+
+
 # typing
 TestObjects = Tuple[ObjectRelationManager, Person, List[House]]
 TestPersonSsn = Tuple[ObjectRelationManager, SsnPerson, Ssn]
+TestPersonSsnSubstitute = Tuple[
+    ObjectRelationManager, SsnPersonSubstitution, SsnSubstitution
+]

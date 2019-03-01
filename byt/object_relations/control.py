@@ -151,12 +151,21 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
             rel2=self._seek_relations(obj2),
         )
 
-    def _one_to_one_substitution(self, relations):
-        rel1 = relations.rel1
-        rel2 = relations.rel2
-        if (not (rel1.substitution or rel2.substitution) and
-                (self.get_relation(rel1) or self.get_relation(rel2))):
-            raise SubstitutionNotAllowedError
+    def _one_to_one_substitution(self, relations: RelationFields):
+        rel1: OneRelation = relations.rel1
+        rel2: OneRelation = relations.rel2
+        rel1_object = self.get_relation(rel1)
+        rel2_object = self.get_relation(rel2)
+
+        if rel1_object or rel2_object:
+            if not rel1.substitution or not rel2.substitution:
+                raise SubstitutionNotAllowedError
+            if rel1_object:
+                relation = self._relations[id(rel1_object)]
+                self._remove_relation(relation, None)
+            if rel2_object:
+                relation = self._relations[id(rel2_object)]
+                self._remove_relation(relation, None)
 
     def _one_to_many_substitution(self, one_relation, to_remove):
         if self.get_relation(one_relation):
