@@ -151,6 +151,20 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
             rel2=self._seek_relations(obj2),
         )
 
+    def _one_to_one_substitution(self, relations):
+        rel1 = relations.rel1
+        rel2 = relations.rel2
+        if (not (rel1.substitution or rel2.substitution) and
+                (self.get_relation(rel1) or self.get_relation(rel2))):
+            raise SubstitutionNotAllowedError
+
+    def _one_to_many_substitution(self, one_relation, to_remove):
+        if self.get_relation(one_relation):
+            if not one_relation.substitution:
+                raise SubstitutionNotAllowedError
+            relation = self._relations[id(self.get_relation(one_relation))]
+            self._remove_relation(relation, to_remove)
+
     def _ensure_substitution(
         self,
         obj1: t.Object1,
@@ -158,28 +172,29 @@ class ObjectRelationManager(RelationOperationsDispatcher, ObjectsContainer):
         relations: RelationFields
     ):
         """
-        Provide substitution for one-to-many relation.
+        Provide substitution for one-to-many and one-to-one relations.
 
         If substitution is allowed and ManyRelation contains already
         the object to substitute remove it from this relation
         to ensure that it will not be duplicated.
         """
         if (isinstance(relations.rel1, OneRelation) and
-                isinstance(relations.rel2, ManyRelation)):
+                isinstance(relations.rel2, OneRelation)):
+            return self._one_to_one_substitution(relations)
+
+        elif isinstance(relations.rel1, OneRelation):
             one_relation = relations.rel1
             to_remove = obj1
-        elif (isinstance(relations.rel2, OneRelation) and
-                isinstance(relations.rel1, ManyRelation)):
+
+        elif isinstance(relations.rel2, OneRelation):
             one_relation = relations.rel2
             to_remove = obj2
+
+        # many-to-many: do nothing.
         else:
             return
 
-        if self.get_relation(one_relation):
-            if not one_relation.substitution:
-                raise SubstitutionNotAllowedError
-            relation = self._relations[id(self.get_relation(one_relation))]
-            self._remove_relation(relation, to_remove)
+        self._one_to_many_substitution(one_relation, to_remove)
 
     def add(self, obj1: t.Object1, obj2: t.Object2):
         relations = self._get_relations(obj1, obj2)

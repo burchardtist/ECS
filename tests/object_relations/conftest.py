@@ -62,6 +62,17 @@ def many_orm():
     return orm, person, houses_list
 
 
+@pytest.fixture
+def one_orm():
+    orm = ObjectRelationManager()
+
+    person = SsnPerson()
+    ssn = Ssn()
+    orm.add(person, ssn)
+
+    return orm, person, ssn
+
+
 # Models
 class IHouse:
     person: OneRelation
@@ -103,6 +114,20 @@ class Person:
 
     def __init__(self):
         self.houses = ManyRelation(to_type=IHouse)
+
+
+class SsnPerson:
+    ssn: OneRelation
+
+    def __init__(self):
+        self.ssn = OneRelation(to_type=Ssn)
+
+
+class Ssn:
+    person: OneRelation
+
+    def __init__(self):
+        self.person = OneRelation(to_type=Person)
 
 
 # typing

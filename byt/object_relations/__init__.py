@@ -1,4 +1,4 @@
 """
 TODO:
- - tests: one to one, many to many,
+ - tests: many to many,
 """
