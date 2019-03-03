@@ -1,6 +1,4 @@
 # BYT
+![python](https://img.shields.io/badge/python-3.7.1-informational.svg) ![Coverage](/tests/coverage.svg)
 
----
-## Preface
-The goal of this project is to implement ECS architecture for python environment.
-## Entity Component System
+A tool to manage Entity Component System architecture.

@@ -2,7 +2,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 
-from byt.object_relations.relations import OneRelation
+from panek.relations import OneRelation
 
 __all__ = [
     'IComponent',

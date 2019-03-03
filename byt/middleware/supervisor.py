@@ -1,19 +1,20 @@
 from typing import Dict, List, Set, Type
 from uuid import UUID
 
+from panek.object_relations import ObjectRelationMapper
+
 import byt.middleware.typing as t
 from byt.ecs.component import IComponent
 from byt.ecs.entity import Entity
 from byt.ecs.system import ISystem
 from byt.middleware.utils import make_iterable
-from byt.object_relations.control import ObjectRelationManager
 
 
 class Supervisor:
     def __init__(self):
         self.entities: Dict[UUID, Entity] = dict()
         self.systems: List[ISystem] = list()
-        self.orm: ObjectRelationManager = ObjectRelationManager()
+        self.orm: ObjectRelationMapper = ObjectRelationMapper()
 
     def get_entity(self, entity_id: UUID) -> Entity:
         return self.entities[entity_id]
